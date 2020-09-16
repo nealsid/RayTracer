@@ -8,6 +8,7 @@
 
 import Cocoa
 import CoreGraphics
+import simd
 
 let imageWidth = 999
 let imageHeight = 999
@@ -15,7 +16,7 @@ let imageHeight = 999
 struct SnowyImageData {
     var outputBitmap : [UInt8] = ([UInt8])(repeating: 0, count: 4 * imageWidth * imageHeight)
     var snowyCGImage : CGImage!
-    
+
     init() {
         for i in 0..<imageWidth {
             for j in 0..<imageHeight {
@@ -27,7 +28,7 @@ struct SnowyImageData {
                 outputBitmap[firstByte + 3] = 255
             }
         }
-        
+
         outputBitmap.withUnsafeBytes() { (buffer : UnsafeRawBufferPointer) in
             let dataProvider = CGDataProvider(dataInfo: nil,
                                               data: buffer.baseAddress!,
@@ -35,7 +36,7 @@ struct SnowyImageData {
                                               releaseData: {
                                                 (_, _, _) -> Void in
             })!
-            
+
             self.snowyCGImage = CGImage(width: imageWidth,
                                  height: imageHeight,
                                  bitsPerComponent: 8,
@@ -61,7 +62,7 @@ func createOpacityAnimation(from : Float, to : Float, duration : Double, fadeInO
         opacityAnimation.values = [from, to]
         opacityAnimation.keyTimes = [0, 1]
     }
-    
+
     opacityAnimation.duration = duration
     opacityAnimation.repeatCount = repeatCount
     opacityAnimation.fillMode = CAMediaTimingFillMode.forwards
@@ -85,7 +86,7 @@ class SnowyImageRenderer {
             snowyImageLayers.append(snowLayer)
         }
     }
-    
+
     func start() {
         let fromTo : [(Float, Float)] = [(0.4, 1.0), (1.0, 0.4)]
         zip(snowyImageLayers, fromTo).forEach { (layer : CALayer, f : (Float, Float)) in
@@ -94,7 +95,7 @@ class SnowyImageRenderer {
             layer.opacity = f.1
         }
     }
-    
+
     func stop() {
         snowyImageLayers.forEach { $0.opacity = 0 }
         snowyImageLayers.forEach { $0.removeAllAnimations() }
@@ -108,7 +109,7 @@ class ViewController: NSViewController {
     var snowGenerator : SnowyImageRenderer!
 
     let camXCoord : Float = 0
-    
+
     @IBOutlet weak var camZ: NSTextField!
     @IBOutlet weak var camY: NSTextField!
     @IBOutlet weak var camX: NSTextField!
@@ -126,16 +127,23 @@ class ViewController: NSViewController {
         rayTraceImageLayer.frame = rtView.bounds
         rtView.layer!.addSublayer(rayTraceImageLayer)
     }
-    
+
     @IBAction func startRT(_ sender: Any) {
         snowGenerator.start()
         rayTraceImageLayer.opacity = 0.0
-        
+
         var rayTraceCGImage : CGImage!
         DispatchQueue.global().async(group: group) { () in
 
-            rayTraceSphere(camera: (0, 0, 2500), focalLength: 2000, radius: 400, circleCenter: (0, 0, 0), pointLight: (0, 500, 300), imageWidth: imageWidth, imageHeight: imageHeight, outputBitmap: &self.outputBitmap)
-            
+            rayTraceSphere(camera: simd_float3(0, 0, 2500),
+                           focalLength: 2000,
+                           radius: 400,
+                           circleCenter: simd_float3(0, 0, 0),
+                           pointLight: simd_float3(0, 500, 300),
+                           imageWidth: imageWidth,
+                           imageHeight: imageHeight,
+                           outputBitmap: &self.outputBitmap)
+
             self.outputBitmap.withUnsafeBytes() { (buffer : UnsafeRawBufferPointer) in
                 rayTraceCGImage = CGImage(width: imageWidth,
                                           height: imageHeight,
@@ -148,14 +156,14 @@ class ViewController: NSViewController {
                                                                    data: buffer.baseAddress!,
                                                                    size: self.outputBitmap.count,
                                                                    releaseData: { (_, _, _) in
-                                                                    
+
                                           })!,
                                           decode: nil,
                                           shouldInterpolate: false,
                                           intent: CGColorRenderingIntent.defaultIntent)!
             }
         }
-        
+
         DispatchQueue.main.async {
             self.group.wait()
             self.rayTraceImageLayer.contents = rayTraceCGImage
@@ -170,26 +178,25 @@ class ViewController: NSViewController {
     }
 }
 
-var ctr : Int = 0
-
-func rayTraceSphere(camera : (Float, Float, Float),
+func rayTraceSphere(camera : simd_float3,
                     focalLength : Float,
                     radius : Float,
-                    circleCenter: (Float, Float, Float),
-                    pointLight : (Float, Float, Float),
+                    circleCenter: simd_float3,
+                    pointLight : simd_float3,
                     imageWidth : Int,
                     imageHeight : Int,
                     outputBitmap : inout [UInt8]) {
     let radiusSquared : Float = pow(radius, 2)
-
+    let ambientLight : UInt8 = 100
+    
     for i in 0..<imageWidth {
         for j in 0..<imageHeight {
-            let cameraToPixelVector = subv((Float(i - imageWidth / 2), Float(imageHeight / 2 - j), camera.2 - focalLength), camera)
-            let c2punit = unitv(cameraToPixelVector)
-            
-            let eyeCenterDiff = subv(camera, circleCenter)
-            let a = -dp(c2punit, eyeCenterDiff)
-            let delta = pow(a, 2) - (dp(eyeCenterDiff, eyeCenterDiff) - radiusSquared)
+            let cameraToPixelVector = simd_float3(Float(i - imageWidth / 2), Float(imageHeight / 2 - j), camera.z - focalLength) - camera
+            let c2punit = simd_normalize(cameraToPixelVector)
+
+            let eyeCenterDiff = camera - circleCenter
+            let a = -simd_dot(c2punit, eyeCenterDiff)
+            let delta = pow(a, 2) - (simd_dot(eyeCenterDiff, eyeCenterDiff) - radiusSquared)
 
             let firstByte = j * imageWidth * 4 + i * 4
             if delta < 0 {
@@ -201,78 +208,54 @@ func rayTraceSphere(camera : (Float, Float, Float),
             }
 
             let sqrtdelta = sqrt(delta)
-            
+
             let d = (a + sqrtdelta, a - sqrtdelta)
             print("intersection parameter values for (\(i), \(j))")
             print("\(d.0) / \(d.1)")
-            let p : (Float, Float, Float) = addv(camera, sv(c2punit, d.0))
-            let q : (Float, Float, Float) = addv(camera, sv(c2punit, d.1))
-    //        print("first point of intersection: (\(String(p1.0)), \(String(p1.1)), \(String(p1.2)))")
-    //        print("second point of intersection: (\(String(p2.0)), \(String(p2.1)), \(String(p2.2)))")
-            print("Point of intersection: (\(String(p.0)), \(String(p.1)), \(String(p.2)))")
-            print("Point of intersection: (\(String(q.0)), \(String(q.1)), \(String(q.2)))")
-            let cam2P = subv(p, camera)
-            let cam2Q = subv(q, camera)
-            let pdist = vlen(cam2P)
-            let qdist = vlen(cam2Q)
-            
-            var spherePoint : (Float, Float, Float)
-            
+            let p : simd_float3 = camera + d.0 * c2punit
+            let q : simd_float3 = camera + d.1 * c2punit
+            print("Point of intersection: (\(String(p.x)), \(String(p.y)), \(String(p.z)))")
+            print("Point of intersection: (\(String(q.x)), \(String(q.y)), \(String(q.z)))")
+            let cam2P = p - camera
+            let cam2Q = q - camera
+            let pdist = simd_length(cam2P)
+            let qdist = simd_length(cam2Q)
+
+            var spherePoint : simd_float3
+
             if pdist < qdist {
                 spherePoint = p
             } else {
                 spherePoint = q
             }
-            
-            var normalAtIntersection : (Float, Float, Float) = subv(spherePoint, circleCenter)
-            let pointLightVector = unitv(subv(pointLight, spherePoint))
-            print("pointlight vector: (\(String(pointLightVector.0)), \(String(pointLightVector.1)), \(String(pointLightVector.2)))")
-            print("normal at intersection: (\(String(normalAtIntersection.0)), \(String(normalAtIntersection.1)), \(String(normalAtIntersection.2)))")
-            normalAtIntersection = unitv(normalAtIntersection)
-            var intensityMultipler = dp(pointLightVector, normalAtIntersection)
-            print("Intensity Multiplier: \(intensityMultipler)")
-            if intensityMultipler <= 0 {
-                intensityMultipler = 0.01 // implies normal is in opposite direction of point light vector and shouldn't be illuminated
-            } else {
-                intensityMultipler /= dp(pointLightVector, pointLightVector) // distance correction for square of distance
-            }
-            print("setting outputbitmap")
-            outputBitmap[firstByte] = UInt8(255 * intensityMultipler)
-            outputBitmap[firstByte + 1] = UInt8(255 * intensityMultipler)
-            outputBitmap[firstByte + 2] = 255
-            outputBitmap[firstByte + 3] = 255
-            print("sett outputbitmap")
 
+            var normalAtIntersection : simd_float3 = spherePoint - circleCenter
+            let pointLightVector = simd_normalize(pointLight - spherePoint)
+            print("pointlight vector: (\(String(pointLightVector.x)), \(String(pointLightVector.y)), \(String(pointLightVector.z)))")
+            print("normal at intersection: (\(String(normalAtIntersection.x)), \(String(normalAtIntersection.y)), \(String(normalAtIntersection.z)))")
+            normalAtIntersection = simd_normalize(normalAtIntersection)
+            var intensityMultiplier = simd_dot(pointLightVector, normalAtIntersection)
+            print("Intensity Multiplier: \(intensityMultiplier)")
+            if intensityMultiplier <= 0 {
+                intensityMultiplier = 0.01 // implies normal is in opposite direction of point light vector and shouldn't be illuminated
+            } else {
+                intensityMultiplier /= simd_dot(pointLightVector, pointLightVector) // distance correction for square of distance
+            }
+            
+            var rgbValue = UInt8(255 * intensityMultiplier)
+            
+            let (val, of) = rgbValue.addingReportingOverflow(ambientLight)
+            
+            if of {
+                rgbValue = 255
+            } else {
+                rgbValue = val
+            }
+            
+            outputBitmap[firstByte] = rgbValue
+            outputBitmap[firstByte + 1] = rgbValue
+            outputBitmap[firstByte + 2] = rgbValue
+            outputBitmap[firstByte + 3] = 255
         }
     }
 }
-
-func dp(_ v1 : (Float, Float, Float), _ v2 : (Float, Float, Float)) -> Float {
-    return v1.0 * v2.0 + v1.1 * v2.1 + v1.2 * v2.2
-}
-
-func sv(_ v1 : (Float, Float, Float), _ m : (Float)) -> (Float, Float, Float) {
-    return (v1.0 * m, v1.1 * m, v1.2 * m)
-}
-
-func subv(_ v1 : (Float, Float, Float), _ v2 : (Float, Float, Float)) -> (Float, Float, Float) {
-    return addv(v1, negv(v2))
-}
-
-func addv(_ v1 : (Float, Float, Float), _ v2 : (Float, Float, Float)) -> (Float, Float, Float) {
-    return (v1.0 + v2.0, v1.1 + v2.1, v1.2 + v2.2)
-}
-
-func unitv(_ v : (Float, Float, Float)) -> (Float, Float, Float) {
-    let vlength = vlen(v)
-    return sv(v, 1 / vlength)
-}
-
-func negv(_ v: (Float, Float, Float)) -> (Float, Float, Float) {
-    return (-v.0, -v.1, -v.2)
-}
-
-func vlen(_ v: (Float, Float, Float)) -> Float {
-    return sqrt(dp(v, v))
-}
-
