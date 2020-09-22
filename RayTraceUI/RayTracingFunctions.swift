@@ -10,34 +10,34 @@ import Foundation
 import simd
 
 struct Intersection {
-    let point : simd_float3
-    let normal : simd_float3
+    let point : simd_double3
+    let normal : simd_double3
     
-    init(atPoint : simd_float3, withNormal: simd_float3) {
+    init(atPoint : simd_double3, withNormal: simd_double3) {
         self.point = atPoint
         self.normal = withNormal
     }
 }
 
 protocol Renderable {
-    func intersections(origin: simd_float3,
-                       direction: simd_float3,
+    func intersections(origin: simd_double3,
+                       direction: simd_double3,
                        intersections : inout [Intersection])
 }
 
 struct Sphere : Renderable {
-    let center : simd_float3
-    let radius : Float
-    let radiusSquared : Float
+    let center : simd_double3
+    let radius : Double
+    let radiusSquared : Double
     
-    init(_ sphereCenter : simd_float3, _ sphereRadius : Float) {
+    init(_ sphereCenter : simd_double3, _ sphereRadius : Double) {
         self.center = sphereCenter
         self.radius = sphereRadius
         self.radiusSquared = pow(self.radius, 2)
     }
     
-    func intersections(origin : simd_float3,
-                       direction : simd_float3,
+    func intersections(origin : simd_double3,
+                       direction : simd_double3,
                        intersections : inout [Intersection]) {
         intersections.removeAll()
         
@@ -50,7 +50,7 @@ struct Sphere : Renderable {
         }
         
         let sqrtdelta = sqrt(delta)
-        var d : [Float] = []
+        var d : [Double] = []
 
         if delta == 0 {
             d = [a]
@@ -65,7 +65,7 @@ struct Sphere : Renderable {
         }
         
         d.forEach() {
-            let p : simd_float3 = origin + $0 * direction
+            let p : simd_double3 = origin + $0 * direction
             let normalAtPoint = simd_normalize(p - center)
             intersections.append(Intersection(atPoint: p,
                                               withNormal: normalAtPoint))
@@ -73,22 +73,41 @@ struct Sphere : Renderable {
     }
 }
 
-
-func raytraceWorld(camera : simd_float3,
-                   focalLength : Float,
-                   pointLight : simd_float3,
+func raytraceWorld(camera : simd_double3,
+                   cameraDirection : simd_double3,
+                   focalLength : Double,
+                   pointLight : simd_double3,
                    imageWidth : Int,
                    imageHeight : Int,
                    objects : [Renderable],
                    outputBitmap : inout [UInt8]) {
     let ambientLight : UInt8 = 100
+    let imageCenterCoordinate = camera + focalLength * cameraDirection
+    let planeNormal = simd_normalize(-cameraDirection)
+    let cameraUp = simd_double3(0, 1, 0)
+    let u = simd_normalize(simd_cross(cameraUp, planeNormal))
+    let v = simd_cross(planeNormal, u)
+
+    let hpc = u * (Double(imageWidth) / 2.0)
+    let vpc = v * (Double(imageHeight) / 2.0)
+
+    let ul : simd_double3 = imageCenterCoordinate - hpc + vpc
+
+    func pixLocation(_ i : Int, _ j : Int) -> simd_double3 {
+        let horizOffset = u * Double(i)
+        let vertOffset = v * Double(j)
+        return ul + horizOffset - vertOffset
+    }
     
+    let columnMultiplier = imageWidth * 4
+
     for i in 0..<imageWidth {
+        let rowOffset = i * 4
         for j in 0..<imageHeight {
-            let cameraToPixelVector = simd_float3(Float(i - imageWidth / 2), Float(imageHeight / 2 - j), camera.z - focalLength) - camera
+            let cameraToPixelVector = pixLocation(i, j) - camera
             let c2punit = simd_normalize(cameraToPixelVector)
 
-            let firstByte = j * imageWidth * 4 + i * 4
+            let firstByte = j * columnMultiplier + rowOffset
             var intersections : [Intersection] = []
             for o in objects {
                 o.intersections(origin: camera, direction: c2punit, intersections: &intersections)

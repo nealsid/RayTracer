@@ -10,8 +10,8 @@ import Cocoa
 import CoreGraphics
 import simd
 
-let imageWidth = 999
-let imageHeight = 999
+let imageWidth : Int = 1000
+let imageHeight : Int = 1000
 
 func createOpacityAnimation(from : Float, to : Float, duration : Double, fadeInOut : Bool = true, repeatCount : Float = 100) -> CAAnimation {
     let opacityAnimation = CAKeyframeAnimation(keyPath: "opacity")
@@ -61,15 +61,16 @@ class ViewController: NSViewController {
 
         var rayTraceCGImage : CGImage!
         DispatchQueue.global().async(group: group) { () in
-            
-            raytraceWorld(camera: simd_float3(0, 0, 2500),
-                          focalLength: 2000,
-                          pointLight: simd_float3(0, 500, 300),
+
+            raytraceWorld(camera: simd_double3(0, 0, 3500),
+                          cameraDirection: simd_double3(0, 0, -1),
+                          focalLength: 1500,
+                          pointLight: simd_double3(0, 2000, 0),
                           imageWidth: imageWidth,
                           imageHeight: imageHeight,
-                          objects: [Sphere(simd_float3(0,0,0), 400)],
+                          objects: [Sphere(simd_double3(0, 0, 0), 1000)],
                           outputBitmap: &self.outputBitmap)
-            
+
             self.outputBitmap.withUnsafeBytes() { (buffer : UnsafeRawBufferPointer) in
                 rayTraceCGImage = CGImage(width: imageWidth,
                                           height: imageHeight,
