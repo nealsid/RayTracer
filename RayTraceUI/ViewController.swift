@@ -62,13 +62,14 @@ class ViewController: NSViewController {
         var rayTraceCGImage : CGImage!
         DispatchQueue.global().async(group: group) { () in
 
-            raytraceWorld(camera: simd_double3(0, 0, 3500),
+            raytraceWorld(camera: simd_double3(0, 500, 5000),
                           cameraDirection: simd_double3(0, 0, -1),
                           focalLength: 1500,
                           pointLight: simd_double3(0, 2000, 0),
                           imageWidth: imageWidth,
                           imageHeight: imageHeight,
-                          objects: [Sphere(simd_double3(0, 0, 0), 1000)],
+                          objects: [Sphere(simd_double3(0, 0, 0), 500),
+                                    Sphere(simd_double3(0, 1000, 0), 500)],
                           outputBitmap: &self.outputBitmap)
 
             self.outputBitmap.withUnsafeBytes() { (buffer : UnsafeRawBufferPointer) in

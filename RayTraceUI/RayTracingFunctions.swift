@@ -12,10 +12,12 @@ import simd
 struct Intersection {
     let point : simd_double3
     let normal : simd_double3
+    let parameter : Double
     
-    init(atPoint : simd_double3, withNormal: simd_double3) {
+    init(atPoint : simd_double3, withNormal: simd_double3, parameter: Double) {
         self.point = atPoint
         self.normal = withNormal
+        self.parameter = parameter
     }
 }
 
@@ -39,8 +41,6 @@ struct Sphere : Renderable {
     func intersections(origin : simd_double3,
                        direction : simd_double3,
                        intersections : inout [Intersection]) {
-        intersections.removeAll()
-        
         let centerToEye = origin - center
         let a = -simd_dot(direction, centerToEye)
         let delta = pow(a, 2) - (simd_length_squared(centerToEye) - radiusSquared)
@@ -68,7 +68,8 @@ struct Sphere : Renderable {
             let p : simd_double3 = origin + $0 * direction
             let normalAtPoint = simd_normalize(p - center)
             intersections.append(Intersection(atPoint: p,
-                                              withNormal: normalAtPoint))
+                                              withNormal: normalAtPoint,
+                                              parameter: $0))
         }
     }
 }
@@ -111,38 +112,44 @@ func raytraceWorld(camera : simd_double3,
             var intersections : [Intersection] = []
             for o in objects {
                 o.intersections(origin: camera, direction: c2punit, intersections: &intersections)
-                if intersections.isEmpty {
-                    outputBitmap[firstByte] = 0
-                    outputBitmap[firstByte + 1] = 0
-                    outputBitmap[firstByte + 2] = 0
-                    outputBitmap[firstByte + 3] = 255
-                    continue
-                }
-                // Take closest intersection
-                let i1 = intersections[0]
-                let n = i1.normal
-                let i1ToPl = pointLight - i1.point
-                let pl = simd_normalize(i1ToPl)
-                var intensityMultiplier = simd_dot(pl, n)
-                if intensityMultiplier < 0 {
-                    intensityMultiplier = 0.01
-                }
-                
-                var rgbValue = UInt8(255 * intensityMultiplier)
-                
-                let (val, of) = rgbValue.addingReportingOverflow(ambientLight)
-                
-                if of {
-                    rgbValue = 255
-                } else {
-                    rgbValue = val
-                }
-                
-                outputBitmap[firstByte] = rgbValue
-                outputBitmap[firstByte + 1] = rgbValue
-                outputBitmap[firstByte + 2] = rgbValue
-                outputBitmap[firstByte + 3] = 255
             }
+
+            if intersections.isEmpty {
+                outputBitmap[firstByte] = 0
+                outputBitmap[firstByte + 1] = 0
+                outputBitmap[firstByte + 2] = 0
+                outputBitmap[firstByte + 3] = 255
+                continue
+            }
+
+            intersections.sort() { (x: Intersection, y : Intersection) -> Bool in
+                return x.parameter <= y.parameter
+            }
+
+            // Take closest intersection
+            let i1 = intersections[0]
+            let n = i1.normal
+            let i1ToPl = pointLight - i1.point
+            let pl = simd_normalize(i1ToPl)
+            var intensityMultiplier = simd_dot(pl, n)
+            if intensityMultiplier < 0 {
+                intensityMultiplier = 0.01
+            }
+
+            var rgbValue = UInt8(255 * intensityMultiplier)
+
+            let (val, of) = rgbValue.addingReportingOverflow(ambientLight)
+
+            if of {
+                rgbValue = 255
+            } else {
+                rgbValue = val
+            }
+
+            outputBitmap[firstByte] = rgbValue
+            outputBitmap[firstByte + 1] = rgbValue
+            outputBitmap[firstByte + 2] = rgbValue
+            outputBitmap[firstByte + 3] = 255
         }
     }
 }
