@@ -122,9 +122,7 @@ func raytraceWorld(camera : simd_double3,
                 continue
             }
 
-            intersections.sort() { (x: Intersection, y : Intersection) -> Bool in
-                return x.parameter <= y.parameter
-            }
+            intersections.sort() { $0.parameter <= $1.parameter } 
 
             // Take closest intersection
             let i1 = intersections[0]
