@@ -11,13 +11,15 @@ import simd
 
 struct Intersection {
     let point : simd_double3
-    let normal : simd_double3
+    let normal : simd_double3?
     let parameter : Double
+    let object : Renderable
     
-    init(atPoint : simd_double3, withNormal: simd_double3, parameter: Double) {
+    init(atPoint : simd_double3, withNormal: simd_double3?, parameter: Double, object: Renderable) {
         self.point = atPoint
         self.normal = withNormal
         self.parameter = parameter
+        self.object = object
     }
 }
 
@@ -25,6 +27,35 @@ protocol Renderable {
     func intersections(origin: simd_double3,
                        direction: simd_double3,
                        intersections : inout [Intersection])
+}
+
+struct PointLight : Renderable {
+    let location : simd_double3
+
+    init (_ location : simd_double3) {
+        self.location = location
+    }
+
+    func intersections(origin: simd_double3,
+                       direction: simd_double3,
+                       intersections : inout [Intersection]) {
+        // origin + t*direction = location at what t
+        let lminuso = location - origin
+        let t1 = lminuso.x / direction.x
+        let t2 = lminuso.y / direction.y
+        let t3 = lminuso.z / direction.z
+
+        if (eq3(t1, t2, t3)) {
+            intersections.append(Intersection(atPoint: origin + t1 * direction,
+                                              withNormal: nil,
+                                              parameter: t1,
+                                              object: self))
+        }
+    }
+
+    func eq3<T : Comparable>(_ a : T, _ b : T, _ c : T) -> Bool {
+        return a == b && b == c
+    }
 }
 
 struct Sphere : Renderable {
@@ -69,8 +100,18 @@ struct Sphere : Renderable {
             let normalAtPoint = simd_normalize(p - center)
             intersections.append(Intersection(atPoint: p,
                                               withNormal: normalAtPoint,
-                                              parameter: $0))
+                                              parameter: $0,
+                                              object : self))
         }
+    }
+}
+
+func traceRay(origin: simd_double3,
+              direction: simd_double3,
+              objects: [Renderable],
+              intersections : inout [Intersection]) {
+    for o in objects {
+        o.intersections(origin: origin, direction: direction, intersections: &intersections)
     }
 }
 
@@ -122,16 +163,19 @@ func raytraceWorld(camera : simd_double3,
                 continue
             }
 
-            intersections.sort() { $0.parameter <= $1.parameter } 
+            intersections.sort() { $0.parameter <= $1.parameter }
 
             // Take closest intersection
             let i1 = intersections[0]
-            let n = i1.normal
             let i1ToPl = pointLight - i1.point
             let pl = simd_normalize(i1ToPl)
-            var intensityMultiplier = simd_dot(pl, n)
-            if intensityMultiplier < 0 {
-                intensityMultiplier = 0.01
+            var intensityMultiplier = 1.0
+
+            if let n = i1.normal {
+                intensityMultiplier = simd_dot(pl, n)
+                if intensityMultiplier < 0 {
+                    intensityMultiplier = 0.01
+                }
             }
 
             var rgbValue = UInt8(255 * intensityMultiplier)
