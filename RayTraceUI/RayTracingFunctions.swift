@@ -42,15 +42,17 @@ func traceRay(origin: simd_double3,
 func raytraceWorld(camera : simd_double3,
                    cameraDirection : simd_double3,
                    focalLength : Double,
-                   pointLight : simd_double3,
                    imageWidth : Int,
                    imageHeight : Int,
+                   lights : [Renderable],
                    objects : [Renderable],
                    outputBitmap : inout [UInt8]) {
     let ambientLight : UInt8 = 100
     let imageCenterCoordinate = camera + focalLength * cameraDirection
     let planeNormal = simd_normalize(-cameraDirection)
     let cameraUp = simd_double3(0, 1, 0)
+
+    // calculate horizontal & vertical focal plane vectors
     let u = simd_normalize(simd_cross(cameraUp, planeNormal))
     let v = simd_cross(planeNormal, u)
 
