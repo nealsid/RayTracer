@@ -28,7 +28,7 @@ struct PointLight : RayIntersectable {
         // origin + t*direction = location at what t
         let t = (location - origin) / direction
 
-        if (eq3(t.x, t.y, t.z)) {
+        if (t.x >= 0.0000001 && eq3(t.x, t.y, t.z)) {
             intersections.append(Intersection(atPoint: origin + t.x * direction,
                                               parameter: t.x,
                                               object: self))
@@ -77,7 +77,7 @@ struct Sphere : RayIntersectable {
             }
         }
 
-        d.forEach() {
+        d.filter({ $0 >= 0.0000001 }).forEach() {
             let p : v3d = origin + $0 * direction
             let normalAtPoint = simd_normalize(p - center)
             intersections.append(Intersection(atPoint: p,

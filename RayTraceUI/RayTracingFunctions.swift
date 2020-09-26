@@ -123,9 +123,9 @@ func raytraceWorld(camera : v3d,
                 var objLightIntersections : [Intersection] = []
                 traceRay(origin: i1.point, direction: pl, objects: objects, intersections: &objLightIntersections)
                 if objLightIntersections.count > 0 {
+                    print("point->light intersection parameter: \(objLightIntersections[0].parameter)")
                     continue
                 }
-
                 if intensity > 0 {
                     intensityMultiplier += intensity
                     if intensityMultiplier >= 1.0 {

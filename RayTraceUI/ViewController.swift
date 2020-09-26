@@ -67,7 +67,8 @@ class ViewController: NSViewController {
                           focalLength: 1500,
                           imageWidth: imageWidth,
                           imageHeight: imageHeight,
-                          lights: [PointLight(v3d(0, 2000, 0))],
+                          lights: [PointLight(v3d(0, 2000, 0)),
+                                   PointLight(v3d(0, -2000, 0))],
                           objects: [Sphere(v3d(0, 0, 0), 500),
                                     Sphere(v3d(0, 1000, 0), 500)],
                           outputBitmap: &self.outputBitmap)
