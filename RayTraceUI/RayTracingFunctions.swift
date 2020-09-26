@@ -105,7 +105,8 @@ func raytraceWorld(camera : v3d,
 
             // Take closest intersection
             let i1 = intersections[0]
-            if i1.normal == nil {
+
+            guard let normalAtIntersection = i1.normal else {
                 continue
             }
 
@@ -113,7 +114,7 @@ func raytraceWorld(camera : v3d,
             for l in lights {
                 let i1ToPl = l.location - i1.point
                 let pl = simd_normalize(i1ToPl)
-                let intensity = simd_dot(pl, i1.normal!)
+                let intensity = simd_dot(pl, normalAtIntersection)
 
                 if intensity <= 0 {
                     continue
