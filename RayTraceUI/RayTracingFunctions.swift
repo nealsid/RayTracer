@@ -81,7 +81,7 @@ func raytraceWorld(camera : v3d,
     
     let columnMultiplier = imageWidth * 4
 
-    for i in 0..<imageWidth {
+    nextpixel:    for i in 0..<imageWidth {
         let rowOffset = i * 4
         for j in 0..<imageHeight {
             let cameraToPixelVector = pixLocation(i, j) - camera
@@ -105,23 +105,40 @@ func raytraceWorld(camera : v3d,
 
             // Take closest intersection
             let i1 = intersections[0]
-            var intensityMultiplier = 1.0
+            if i1.normal == nil {
+                continue
+            }
 
+            var intensityMultiplier = 0.0
             for l in lights {
                 let i1ToPl = l.location - i1.point
-
                 let pl = simd_normalize(i1ToPl)
+                let intensity = simd_dot(pl, i1.normal!)
 
-                if let n = i1.normal {
-                    intensityMultiplier = simd_dot(pl, n)
-                    if intensityMultiplier < 0 {
-                        intensityMultiplier = 0.01
+                if intensity <= 0 {
+                    continue
+                }
+
+                // Now trace another ray to find objects in between current point and light.
+                var objLightIntersections : [Intersection] = []
+                traceRay(origin: i1.point, direction: pl, objects: objects, intersections: &objLightIntersections)
+                if objLightIntersections.count > 0 {
+                    continue
+                }
+
+                if intensity > 0 {
+                    intensityMultiplier += intensity
+                    if intensityMultiplier >= 1.0 {
+                        intensityMultiplier = 1.0
+                        break
                     }
                 }
             }
-            
-            var rgbValue = UInt8(255 * intensityMultiplier)
 
+            var rgbValue = UInt8(255 * intensityMultiplier)
+            if intensityMultiplier > 0 {
+                print("\(intensityMultiplier)")
+            }
             let (val, of) = rgbValue.addingReportingOverflow(ambientLight)
 
             if of {
