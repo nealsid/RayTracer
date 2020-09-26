@@ -9,21 +9,21 @@
 import Foundation
 import simd
 
-protocol Renderable {
-    func intersections(origin: simd_double3,
-                       direction: simd_double3,
+protocol RayIntersectable {
+    func intersections(origin: v3d,
+                       direction: v3d,
                        intersections : inout [Intersection])
 }
 
-struct PointLight : Renderable {
-    let location : simd_double3
+struct PointLight : RayIntersectable {
+    let location : v3d
 
-    init (_ location : simd_double3) {
+    init (_ location : v3d) {
         self.location = location
     }
 
-    func intersections(origin: simd_double3,
-                       direction: simd_double3,
+    func intersections(origin: v3d,
+                       direction: v3d,
                        intersections : inout [Intersection]) {
         // origin + t*direction = location at what t
         let t = (location - origin) / direction
@@ -40,19 +40,19 @@ struct PointLight : Renderable {
     }
 }
 
-struct Sphere : Renderable {
-    let center : simd_double3
+struct Sphere : RayIntersectable {
+    let center : v3d
     let radius : Double
     let radiusSquared : Double
 
-    init(_ sphereCenter : simd_double3, _ sphereRadius : Double) {
+    init(_ sphereCenter : v3d, _ sphereRadius : Double) {
         self.center = sphereCenter
         self.radius = sphereRadius
         self.radiusSquared = pow(self.radius, 2)
     }
 
-    func intersections(origin : simd_double3,
-                       direction : simd_double3,
+    func intersections(origin : v3d,
+                       direction : v3d,
                        intersections : inout [Intersection]) {
         let centerToEye = origin - center
         let a = -simd_dot(direction, centerToEye)
@@ -78,7 +78,7 @@ struct Sphere : Renderable {
         }
 
         d.forEach() {
-            let p : simd_double3 = origin + $0 * direction
+            let p : v3d = origin + $0 * direction
             let normalAtPoint = simd_normalize(p - center)
             intersections.append(Intersection(atPoint: p,
                                               withNormal: normalAtPoint,

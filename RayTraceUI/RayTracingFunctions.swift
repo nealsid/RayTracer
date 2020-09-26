@@ -9,20 +9,23 @@
 import Foundation
 import simd
 
-struct Intersection {
-    let point : simd_double3
-    let normal : simd_double3?
-    let parameter : Double
-    let object : Renderable
+typealias v3 = SIMD3
+typealias v3d = v3<Double>
 
-    init(atPoint : simd_double3, parameter: Double, object: Renderable) {
-        self.point = atPoint
-        self.normal = nil
-        self.parameter = parameter
-        self.object = object
+struct Intersection {
+    let point : v3d
+    let normal : v3d?
+    let parameter : Double
+    let object : RayIntersectable
+
+    init(atPoint : v3d, parameter: Double, object: RayIntersectable) {
+        self.init(atPoint: atPoint,
+                  withNormal: nil,
+                  parameter: parameter,
+                  object: object)
     }
 
-    init(atPoint : simd_double3, withNormal: simd_double3?, parameter: Double, object: Renderable) {
+    init(atPoint : v3d, withNormal: v3d?, parameter: Double, object: RayIntersectable) {
         self.point = atPoint
         self.normal = withNormal
         self.parameter = parameter
@@ -30,38 +33,47 @@ struct Intersection {
     }
 }
 
-func traceRay(origin: simd_double3,
-              direction: simd_double3,
-              objects: [Renderable],
+func traceRay(origin: v3d,
+              direction: v3d,
+              objects: [RayIntersectable],
               intersections : inout [Intersection]) {
     for o in objects {
         o.intersections(origin: origin, direction: direction, intersections: &intersections)
     }
 }
 
-func raytraceWorld(camera : simd_double3,
-                   cameraDirection : simd_double3,
+func getPlaneVectors(origin : v3d,
+                     direction : v3d,
+                     focalLength : Double) -> (v3d, v3d) {
+    let planeNormal = simd_normalize(-direction)
+    let up = v3d(0, 1, 0)
+
+    // calculate horizontal & vertical focal plane vectors
+    let u = simd_normalize(simd_cross(up, planeNormal))
+    let v = simd_cross(planeNormal, u)
+
+    return (u,v)
+}
+
+func raytraceWorld(camera : v3d,
+                   cameraDirection : v3d,
                    focalLength : Double,
                    imageWidth : Int,
                    imageHeight : Int,
-                   lights : [Renderable],
-                   objects : [Renderable],
+                   lights : [PointLight],
+                   objects : [RayIntersectable],
                    outputBitmap : inout [UInt8]) {
     let ambientLight : UInt8 = 100
     let imageCenterCoordinate = camera + focalLength * cameraDirection
-    let planeNormal = simd_normalize(-cameraDirection)
-    let cameraUp = simd_double3(0, 1, 0)
 
-    // calculate horizontal & vertical focal plane vectors
-    let u = simd_normalize(simd_cross(cameraUp, planeNormal))
-    let v = simd_cross(planeNormal, u)
+    let (u, v) : (v3d, v3d) = getPlaneVectors(origin: camera, direction: cameraDirection, focalLength: focalLength)
 
     let hpc = u * (Double(imageWidth) / 2.0)
     let vpc = v * (Double(imageHeight) / 2.0)
 
-    let ul : simd_double3 = imageCenterCoordinate - hpc + vpc
+    let ul : v3d = imageCenterCoordinate - hpc + vpc
 
-    func pixLocation(_ i : Int, _ j : Int) -> simd_double3 {
+    func pixLocation(_ i : Int, _ j : Int) -> v3d {
         let horizOffset = u * Double(i)
         let vertOffset = v * Double(j)
         return ul + horizOffset - vertOffset
@@ -93,17 +105,21 @@ func raytraceWorld(camera : simd_double3,
 
             // Take closest intersection
             let i1 = intersections[0]
-            let i1ToPl = pointLight - i1.point
-            let pl = simd_normalize(i1ToPl)
             var intensityMultiplier = 1.0
 
-            if let n = i1.normal {
-                intensityMultiplier = simd_dot(pl, n)
-                if intensityMultiplier < 0 {
-                    intensityMultiplier = 0.01
+            for l in lights {
+                let i1ToPl = l.location - i1.point
+
+                let pl = simd_normalize(i1ToPl)
+
+                if let n = i1.normal {
+                    intensityMultiplier = simd_dot(pl, n)
+                    if intensityMultiplier < 0 {
+                        intensityMultiplier = 0.01
+                    }
                 }
             }
-
+            
             var rgbValue = UInt8(255 * intensityMultiplier)
 
             let (val, of) = rgbValue.addingReportingOverflow(ambientLight)
