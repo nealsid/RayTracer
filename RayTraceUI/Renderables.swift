@@ -40,6 +40,26 @@ struct PointLight : RayIntersectable {
     }
 }
 
+struct Triangle : RayIntersectable {
+    let coordinates : [v3d]
+
+    init(_ points : [v3d]) {
+        self.coordinates = points
+        assert(points.count == 3)
+    }
+
+     func intersections(origin: v3d, direction: v3d, intersections: inout [Intersection]) {
+        let v1 = coordinates[1] - coordinates[0]
+        let v2 = coordinates[2] - coordinates[0]
+        let normal = simd_normalize(simd_cross(v1, v2))
+        let planeConstant = simd_dot(normal, coordinates[0])
+        let intersectionParameter = (planeConstant - simd_dot(normal, origin)) / (simd_dot(normal, direction))
+        if (intersectionParameter > 0) {
+            print("triangle intersection parameter: \(intersectionParameter)")
+        }
+    }
+}
+
 struct Sphere : RayIntersectable {
     let center : v3d
     let radius : Double

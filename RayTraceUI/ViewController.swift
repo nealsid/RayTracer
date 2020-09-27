@@ -69,8 +69,9 @@ class ViewController: NSViewController {
                           imageHeight: imageHeight,
                           lights: [PointLight(v3d(0, 2000, 0)),
                                    PointLight(v3d(0, -2000, 0))],
-                          objects: [Sphere(v3d(0, 0, 0), 500),
-                                    Sphere(v3d(0, 1000, 0), 500)],
+                          objects: /*[Sphere(v3d(0, 0, 0), 500),
+                                    Sphere(v3d(0, 1000, 0), 500)],*/
+                                   [Triangle([v3d(0,0,0), v3d(0,500,0), v3d(0,0,-500)])],
                           outputBitmap: &self.outputBitmap)
 
             self.outputBitmap.withUnsafeBytes() { (buffer : UnsafeRawBufferPointer) in

@@ -81,7 +81,7 @@ func raytraceWorld(camera : v3d,
     
     let columnMultiplier = imageWidth * 4
 
-    nextpixel:    for i in 0..<imageWidth {
+    for i in 0..<imageWidth {
         let rowOffset = i * 4
         for j in 0..<imageHeight {
             let cameraToPixelVector = pixLocation(i, j) - camera
