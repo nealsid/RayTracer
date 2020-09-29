@@ -138,7 +138,7 @@ func raytraceWorld(camera : v3d,
 
             var rgbValue = UInt8(255 * intensityMultiplier)
             if intensityMultiplier > 0 {
-                print("\(intensityMultiplier)")
+                print("intensity \(intensityMultiplier)")
             }
             let (val, of) = rgbValue.addingReportingOverflow(ambientLight)
 
@@ -148,8 +148,8 @@ func raytraceWorld(camera : v3d,
                 rgbValue = val
             }
 
-            outputBitmap[firstByte] = rgbValue
-            outputBitmap[firstByte + 1] = rgbValue
+            outputBitmap[firstByte] = 0
+            outputBitmap[firstByte + 1] = rgbValue / 2
             outputBitmap[firstByte + 2] = rgbValue
             outputBitmap[firstByte + 3] = 255
         }

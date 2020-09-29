@@ -41,31 +41,41 @@ struct PointLight : RayIntersectable {
 }
 
 struct Triangle : RayIntersectable {
-    let coordinates : [v3d]
+    let vertices : [v3d]
 
     init(_ points : [v3d]) {
-        self.coordinates = points
+        self.vertices = points
         assert(points.count == 3)
     }
 
      func intersections(origin: v3d, direction: v3d, intersections: inout [Intersection]) {
-        let v1 = coordinates[1] - coordinates[0]
-        let v2 = coordinates[2] - coordinates[0]
-        let normal = simd_normalize(simd_cross(v1, v2))
-        let planeConstant = simd_dot(normal, coordinates[0])
+        let v0v1 = vertices[1] - vertices[0]
+        let v0v2 = vertices[2] - vertices[0]
+        let v1v2 = vertices[2] - vertices[1]
+        let v2v0 = -v0v2
+
+        let normal = simd_normalize(simd_cross(v0v1, v0v2))
+        let planeConstant = simd_dot(normal, vertices[0])
         let nddot = simd_dot(normal, -direction)
 
         if nddot <= 0 {  // back side of triangle or the ray is parallel to the triangle.
             return
         }
 
-        let intersectionParameter = (planeConstant - simd_dot(normal, origin)) / -nddot
+        let intersectionParameter = (planeConstant - simd_dot(normal, origin)) / -nddot // TODO fix negative sign (should be on origin?)
 
         if (intersectionParameter > 0) {
             let point : v3d = origin + intersectionParameter * direction
-            let pv1 = point - coordinates[0]
-            let n = simd_cross(v1, pv1)
-            if simd_dot(n, normal) >= 0 {
+            let v0p = point - vertices[0]
+            let v1p = point - vertices[1]
+            let v2p = point - vertices[2]
+
+            let a = simd_cross(v0v1, v0p)
+            let b = simd_cross(v1v2, v1p)
+            let c = simd_cross(v2v0, v2p)
+            if simd_dot(a, normal) >= 0 &&
+                simd_dot(b, normal) >= 0 &&
+                simd_dot(c, normal) >= 0 {
 //                print("normal: \(normal)")
 //                print("pointnormal: \(n)")
                 print("intersection: \(point)")
