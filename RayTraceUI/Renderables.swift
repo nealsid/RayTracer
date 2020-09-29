@@ -53,24 +53,23 @@ struct Triangle : RayIntersectable {
         let v2 = coordinates[2] - coordinates[0]
         let normal = simd_normalize(simd_cross(v1, v2))
         let planeConstant = simd_dot(normal, coordinates[0])
-        let nddot = simd_dot(normal, direction)
+        let nddot = simd_dot(normal, -direction)
 
-        if nddot == 0 {
+        if nddot <= 0 {  // back side of triangle or the ray is parallel to the triangle.
             return
         }
 
-        let intersectionParameter = (planeConstant - simd_dot(normal, origin)) / nddot
+        let intersectionParameter = (planeConstant - simd_dot(normal, origin)) / -nddot
 
         if (intersectionParameter > 0) {
             let point : v3d = origin + intersectionParameter * direction
-            let pv1 = v1 - point
-            let v2v1 = v2 - v1
-            let n = simd_cross(pv1, v2v1)
-            if simd_dot(n, normal) > 0 {
+            let pv1 = point - coordinates[0]
+            let n = simd_cross(v1, pv1)
+            if simd_dot(n, normal) >= 0 {
 //                print("normal: \(normal)")
 //                print("pointnormal: \(n)")
-//                print("intersection: \(point)")
-                intersections.append(Intersection(atPoint: point, withNormal: simd_normalize(n), parameter: intersectionParameter, object: self))
+                print("intersection: \(point)")
+                intersections.append(Intersection(atPoint: point, withNormal: normal, parameter: intersectionParameter, object: self))
             }
         }
     }
