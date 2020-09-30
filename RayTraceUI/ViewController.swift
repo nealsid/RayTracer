@@ -58,15 +58,17 @@ class ViewController: NSViewController {
         rayTraceImageLayer.frame = rtView.bounds
         rtView.layer!.addSublayer(rayTraceImageLayer)
 
-        stopwatchDisplayTimer = Timer(timeInterval: 0.01, repeats: true) {_ in
-            self.rtRenderingTime.stringValue = String(format:"%.3f seconds", Date().timeIntervalSince(self.rtStart))
-        }
-
         Timer.scheduledTimer(withTimeInterval: 0.50, repeats: false) { _ in
             self.snowGenerator.stop()
             self.rayTraceImageLayer.removeAllAnimations()
         }
+    }
 
+    func initStopwatchTimer() {
+        stopwatchDisplayTimer = Timer(timeInterval: 0.01, repeats: true) {_ in
+            self.rtRenderingTime.stringValue = String(format:"%.3f seconds", Date().timeIntervalSince(self.rtStart))
+        }
+        RunLoop.main.add(self.stopwatchDisplayTimer, forMode: RunLoop.Mode.default)
     }
 
     @IBAction func startRT(_ sender: Any) {
@@ -75,7 +77,7 @@ class ViewController: NSViewController {
 
         var rayTraceCGImage : CGImage!
         rtStart = Date()
-        RunLoop.main.add(self.stopwatchDisplayTimer, forMode: RunLoop.Mode.default)
+        initStopwatchTimer()
         DispatchQueue.global().async(group: group) { () in
             raytraceWorld(camera: v3d(0, 0, 1000),
                           cameraDirection: v3d(0, 0, -1),
