@@ -63,7 +63,6 @@ func raytraceWorld(camera : v3d,
                    lights : [PointLight],
                    objects : [RayIntersectable],
                    outputBitmap : inout [UInt8]) {
-    let ambientLight : UInt8 = 100
     let imageCenterCoordinate = camera + focalLength * cameraDirection
 
     let (u, v) : (v3d, v3d) = getPlaneVectors(origin: camera, direction: cameraDirection, focalLength: focalLength)
@@ -110,31 +109,7 @@ func raytraceWorld(camera : v3d,
                         continue
                     }
 
-                    var intensityMultiplier = 0.0
-                    for l in lights {
-                        let i1ToPl = l.location - i1.point
-                        let pl = simd_normalize(i1ToPl)
-                        let intensity = simd_dot(pl, normalAtIntersection)
-
-                        if intensity <= 0 {
-                            continue
-                        }
-
-                        // Now trace another ray to find objects in between current point and light.
-                        var objLightIntersections : [Intersection] = []
-                        traceRay(origin: i1.point, direction: pl, objects: objects, intersections: &objLightIntersections)
-                        if objLightIntersections.count > 0 {
-                            print("point->light intersection parameter: \(objLightIntersections[0].parameter)")
-                            continue
-                        }
-                        if intensity > 0 {
-                            intensityMultiplier += intensity
-                            if intensityMultiplier >= 1.0 {
-                                intensityMultiplier = 1.0
-                                break
-                            }
-                        }
-                    }
+                    let intensityMultiplier = calculateLighting(atPoint: i1.point, fromLights: lights, withNormal: normalAtIntersection, worldObjects: objects)
 
                     pixelValues.append(255 * intensityMultiplier)
                 }
@@ -149,4 +124,37 @@ func raytraceWorld(camera : v3d,
             outputBitmap[firstByte + 3] = 255
         }
     }
+}
+
+func calculateLighting(atPoint point : v3d,
+                       fromLights lights : [PointLight],
+                       withNormal normal : v3d,
+                       worldObjects objects : [RayIntersectable]) -> Double {
+    var intensityMultiplier : Double = 0.0
+
+    for l in lights {
+        let i1ToPl = l.location - point
+        let pl = simd_normalize(i1ToPl)
+        let intensity = simd_dot(pl, normal)
+
+        if intensity <= 0 {
+            continue
+        }
+
+        // Now trace another ray to find objects in between current point and light.
+        var objLightIntersections : [Intersection] = []
+        traceRay(origin: point, direction: pl, objects: objects, intersections: &objLightIntersections)
+        if objLightIntersections.count > 0 {
+            print("point->light intersection parameter: \(objLightIntersections[0].parameter)")
+            continue
+        }
+        if intensity > 0 {
+            intensityMultiplier += intensity
+            if intensityMultiplier >= 1.0 {
+                intensityMultiplier = 1.0
+                break
+            }
+        }
+    }
+    return intensityMultiplier
 }
