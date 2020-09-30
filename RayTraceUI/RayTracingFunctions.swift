@@ -73,84 +73,79 @@ func raytraceWorld(camera : v3d,
 
     let ul : v3d = imageCenterCoordinate - hpc + vpc
 
-    func pixLocation(_ i : Int, _ j : Int) -> v3d {
-        let horizOffset = u * Double(i)
-        let vertOffset = v * Double(j)
+    func pixLocation(_ i : Double, _ j : Double) -> v3d {
+        let horizOffset = u * i
+        let vertOffset = v * j
         return ul + horizOffset - vertOffset
     }
     
     let columnMultiplier = imageWidth * 4
+    let subdivision : Double = 0.25
 
     for i in 0..<imageWidth {
         let rowOffset = i * 4
         for j in 0..<imageHeight {
-            let cameraToPixelVector = pixLocation(i, j) - camera
-            let c2punit = simd_normalize(cameraToPixelVector)
-
             let firstByte = j * columnMultiplier + rowOffset
-            var intersections : [Intersection] = []
-            for o in objects {
-                o.intersections(origin: camera, direction: c2punit, intersections: &intersections)
-            }
+            var pixelValues : [Double] = []
 
-            if intersections.isEmpty {
-                outputBitmap[firstByte] = 0
-                outputBitmap[firstByte + 1] = 0
-                outputBitmap[firstByte + 2] = 0
-                outputBitmap[firstByte + 3] = 255
-                continue
-            }
+            for x in stride(from: Double(i), to: Double(i+1), by: subdivision) {
+                for y in stride(from: Double(j), to: Double(j+1), by: subdivision) {
 
-            intersections.sort() { $0.parameter <= $1.parameter }
+                    let cameraToPixelVector = pixLocation(x, y) - camera
+                    let c2punit = simd_normalize(cameraToPixelVector)
+                    var intersections : [Intersection] = []
+                    traceRay(origin: camera, direction: c2punit, objects: objects, intersections: &intersections)
 
-            // Take closest intersection
-            let i1 = intersections[0]
-
-            guard let normalAtIntersection = i1.normal else {
-                continue
-            }
-
-            var intensityMultiplier = 0.0
-            for l in lights {
-                let i1ToPl = l.location - i1.point
-                let pl = simd_normalize(i1ToPl)
-                let intensity = simd_dot(pl, normalAtIntersection)
-
-                if intensity <= 0 {
-                    continue
-                }
-
-                // Now trace another ray to find objects in between current point and light.
-                var objLightIntersections : [Intersection] = []
-                traceRay(origin: i1.point, direction: pl, objects: objects, intersections: &objLightIntersections)
-                if objLightIntersections.count > 0 {
-                    print("point->light intersection parameter: \(objLightIntersections[0].parameter)")
-                    continue
-                }
-                if intensity > 0 {
-                    intensityMultiplier += intensity
-                    if intensityMultiplier >= 1.0 {
-                        intensityMultiplier = 1.0
-                        break
+                    guard !intersections.isEmpty else {
+                        pixelValues.append(0)
+                        continue
                     }
+
+                    intersections.sort() { $0.parameter <= $1.parameter }
+
+                    // Take closest intersection
+                    let i1 = intersections[0]
+
+                    guard let normalAtIntersection = i1.normal else {
+                        continue
+                    }
+
+                    var intensityMultiplier = 0.0
+                    for l in lights {
+                        let i1ToPl = l.location - i1.point
+                        let pl = simd_normalize(i1ToPl)
+                        let intensity = simd_dot(pl, normalAtIntersection)
+
+                        if intensity <= 0 {
+                            continue
+                        }
+
+                        // Now trace another ray to find objects in between current point and light.
+                        var objLightIntersections : [Intersection] = []
+                        traceRay(origin: i1.point, direction: pl, objects: objects, intersections: &objLightIntersections)
+                        if objLightIntersections.count > 0 {
+                            print("point->light intersection parameter: \(objLightIntersections[0].parameter)")
+                            continue
+                        }
+                        if intensity > 0 {
+                            intensityMultiplier += intensity
+                            if intensityMultiplier >= 1.0 {
+                                intensityMultiplier = 1.0
+                                break
+                            }
+                        }
+                    }
+
+                    pixelValues.append(255 * intensityMultiplier)
                 }
             }
+            var averageValue : Double = pixelValues.reduce(0, +)
 
-            var rgbValue = UInt8(255 * intensityMultiplier)
-            if intensityMultiplier > 0 {
-                print("intensity \(intensityMultiplier)")
-            }
-            let (val, of) = rgbValue.addingReportingOverflow(ambientLight)
-
-            if of {
-                rgbValue = 255
-            } else {
-                rgbValue = val
-            }
-
-            outputBitmap[firstByte] = 0
-            outputBitmap[firstByte + 1] = rgbValue / 2
-            outputBitmap[firstByte + 2] = rgbValue
+            averageValue = averageValue / Double(pixelValues.count)
+            let avg : UInt8 = UInt8(averageValue)
+            outputBitmap[firstByte] = avg
+            outputBitmap[firstByte + 1] = avg
+            outputBitmap[firstByte + 2] = avg
             outputBitmap[firstByte + 3] = 255
         }
     }

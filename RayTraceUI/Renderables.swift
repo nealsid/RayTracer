@@ -76,9 +76,6 @@ struct Triangle : RayIntersectable {
             if simd_dot(a, normal) >= 0 &&
                 simd_dot(b, normal) >= 0 &&
                 simd_dot(c, normal) >= 0 {
-//                print("normal: \(normal)")
-//                print("pointnormal: \(n)")
-                print("intersection: \(point)")
                 intersections.append(Intersection(atPoint: point, withNormal: normal, parameter: intersectionParameter, object: self))
             }
         }
