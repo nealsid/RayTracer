@@ -34,7 +34,7 @@ class ViewController: NSViewController {
     var outputBitmap : [UInt8] = ([UInt8])(repeating: 0, count: 4 * imageWidth * imageHeight)
     let group = DispatchGroup()
     var snowGenerator : SnowyImageRenderer!
-
+    var stopwatchDisplayTimer : Timer!
     let camXCoord : Float = 0
 
     @IBOutlet weak var camZ: NSTextField!
@@ -42,6 +42,10 @@ class ViewController: NSViewController {
     @IBOutlet weak var camX: NSTextField!
     // Subview that will contain raytrace image
     @IBOutlet weak var rtView: NSView!
+
+    @IBOutlet weak var rtRenderingTime: NSTextField!
+    var rtStart : Date!
+    var rtEnd : Date!
 
     // The layer that contains the raytraced image
     let rayTraceImageLayer : CALayer = CALayer()
@@ -53,6 +57,16 @@ class ViewController: NSViewController {
         rtView.layer!.borderColor = CGColor.black
         rayTraceImageLayer.frame = rtView.bounds
         rtView.layer!.addSublayer(rayTraceImageLayer)
+
+        stopwatchDisplayTimer = Timer(timeInterval: 0.01, repeats: true) {_ in
+            self.rtRenderingTime.stringValue = Date().description
+        }
+
+        Timer.scheduledTimer(withTimeInterval: 0.50, repeats: false) { _ in
+            self.snowGenerator.stop()
+            self.rayTraceImageLayer.removeAllAnimations()
+        }
+
     }
 
     @IBAction func startRT(_ sender: Any) {
@@ -60,8 +74,8 @@ class ViewController: NSViewController {
         rayTraceImageLayer.opacity = 0.0
 
         var rayTraceCGImage : CGImage!
+        RunLoop.main.add(self.stopwatchDisplayTimer, forMode: RunLoop.Mode.default)
         DispatchQueue.global().async(group: group) { () in
-
             raytraceWorld(camera: v3d(0, 0, 1000),
                           cameraDirection: v3d(0, 0, -1),
                           focalLength: 800,
@@ -74,6 +88,7 @@ class ViewController: NSViewController {
                                     Sphere(v3d(0, 1000, 0), 500)],*/
                                    [Triangle([v3d(-500, -500, 0), v3d(500, -500, 0), v3d(-500, 500, 0)])],
                           outputBitmap: &self.outputBitmap)
+            self.stopwatchDisplayTimer.invalidate()
 
             self.outputBitmap.withUnsafeBytes() { (buffer : UnsafeRawBufferPointer) in
                 rayTraceCGImage = CGImage(width: imageWidth,
@@ -93,17 +108,16 @@ class ViewController: NSViewController {
                                           shouldInterpolate: false,
                                           intent: CGColorRenderingIntent.defaultIntent)!
             }
-        }
-
-        DispatchQueue.main.async {
-            self.group.wait()
-            self.rayTraceImageLayer.contents = rayTraceCGImage
-            let opacityAnimation = createOpacityAnimation(from: 0.0, to: 1.0, duration: 0.50, fadeInOut: false, repeatCount: 1)
-            self.rayTraceImageLayer.add(opacityAnimation, forKey: "opacity")
-            self.rayTraceImageLayer.opacity = 1.0
-            Timer.scheduledTimer(withTimeInterval: 0.50, repeats: false) { _ in
-                self.snowGenerator.stop()
-                self.rayTraceImageLayer.removeAllAnimations()
+            
+            self.group.notify(queue: DispatchQueue.main) {
+                self.rayTraceImageLayer.contents = rayTraceCGImage
+                let opacityAnimation = createOpacityAnimation(from: 0.0, to: 1.0, duration: 0.50, fadeInOut: false, repeatCount: 1)
+                self.rayTraceImageLayer.add(opacityAnimation, forKey: "opacity")
+                self.rayTraceImageLayer.opacity = 1.0
+                Timer.scheduledTimer(withTimeInterval: 0.50, repeats: false) { _ in
+                    self.snowGenerator.stop()
+                    self.rayTraceImageLayer.removeAllAnimations()
+                }
             }
         }
     }

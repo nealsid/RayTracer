@@ -705,19 +705,19 @@
         <scene sceneID="hIz-AP-VOD">
             <objects>
                 <viewController id="XfG-lQ-9wD" customClass="ViewController" customModule="RayTraceUI" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" wantsLayer="YES" id="m2S-Jp-Qdl">
-                        <rect key="frame" x="0.0" y="0.0" width="1024" height="768"/>
+                    <view key="view" wantsLayer="YES" misplaced="YES" id="m2S-Jp-Qdl">
+                        <rect key="frame" x="0.0" y="0.0" width="1024" height="782"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <customView wantsLayer="YES" translatesAutoresizingMaskIntoConstraints="NO" id="XI8-iu-xEE">
-                                <rect key="frame" x="334" y="20" width="670" height="728"/>
+                                <rect key="frame" x="334" y="40" width="670" height="728"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="728" id="Rd0-hE-rZV"/>
                                     <constraint firstAttribute="width" constant="670" id="arC-9v-wVt"/>
                                 </constraints>
                             </customView>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fSi-VN-dSh">
-                                <rect key="frame" x="14" y="720" width="308" height="32"/>
+                                <rect key="frame" x="14" y="734" width="308" height="32"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="push" title="Ray Trace" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="yl5-N5-S8h">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -727,22 +727,38 @@
                                     <action selector="startRT:" target="XfG-lQ-9wD" id="AMC-fo-d31"/>
                                 </connections>
                             </button>
+                            <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="NBq-dw-7jf">
+                                <rect key="frame" x="0.0" y="38" width="1024" height="5"/>
+                            </box>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="A7j-ej-YHo">
+                                <rect key="frame" x="819" y="16" width="185" height="16"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Label" id="xxb-gd-WjE">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
                         </subviews>
                         <constraints>
                             <constraint firstItem="XI8-iu-xEE" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="20" id="4M2-sb-YzB"/>
+                            <constraint firstItem="NBq-dw-7jf" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" id="FlU-9p-QEt"/>
                             <constraint firstAttribute="trailing" secondItem="XI8-iu-xEE" secondAttribute="trailing" constant="20" id="OxZ-bO-BNu"/>
-                            <constraint firstAttribute="bottom" secondItem="XI8-iu-xEE" secondAttribute="bottom" constant="20" id="XJF-DG-9jS"/>
+                            <constraint firstAttribute="bottom" secondItem="XI8-iu-xEE" secondAttribute="bottom" constant="40" id="XJF-DG-9jS"/>
+                            <constraint firstItem="NBq-dw-7jf" firstAttribute="top" secondItem="XI8-iu-xEE" secondAttribute="bottom" constant="-1" id="mrD-ZM-ULu"/>
                             <constraint firstItem="XI8-iu-xEE" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="334" id="u1p-KU-S8l"/>
+                            <constraint firstAttribute="trailing" secondItem="NBq-dw-7jf" secondAttribute="trailing" id="zbc-h5-gaQ"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="rtRenderingTime" destination="A7j-ej-YHo" id="5ZB-Ft-ayH"/>
                         <outlet property="rtView" destination="XI8-iu-xEE" id="yfk-Wr-6Jh"/>
                     </connections>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
                 <userDefaultsController representsSharedInstance="YES" id="aQA-L4-OEA"/>
             </objects>
-            <point key="canvasLocation" x="75" y="655"/>
+            <point key="canvasLocation" x="75" y="661"/>
         </scene>
     </scenes>
 </document>
