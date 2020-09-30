@@ -59,7 +59,7 @@ class ViewController: NSViewController {
         rtView.layer!.addSublayer(rayTraceImageLayer)
 
         stopwatchDisplayTimer = Timer(timeInterval: 0.01, repeats: true) {_ in
-            self.rtRenderingTime.stringValue = Date().description
+            self.rtRenderingTime.stringValue = String(format:"%.3f seconds", Date().timeIntervalSince(self.rtStart))
         }
 
         Timer.scheduledTimer(withTimeInterval: 0.50, repeats: false) { _ in
@@ -74,6 +74,7 @@ class ViewController: NSViewController {
         rayTraceImageLayer.opacity = 0.0
 
         var rayTraceCGImage : CGImage!
+        rtStart = Date()
         RunLoop.main.add(self.stopwatchDisplayTimer, forMode: RunLoop.Mode.default)
         DispatchQueue.global().async(group: group) { () in
             raytraceWorld(camera: v3d(0, 0, 1000),
@@ -108,7 +109,7 @@ class ViewController: NSViewController {
                                           shouldInterpolate: false,
                                           intent: CGColorRenderingIntent.defaultIntent)!
             }
-            
+
             self.group.notify(queue: DispatchQueue.main) {
                 self.rayTraceImageLayer.contents = rayTraceCGImage
                 let opacityAnimation = createOpacityAnimation(from: 0.0, to: 1.0, duration: 0.50, fadeInOut: false, repeatCount: 1)
