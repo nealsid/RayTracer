@@ -54,15 +54,15 @@ struct Triangle : RayIntersectable {
         let v1v2 = vertices[2] - vertices[1]
         let v2v0 = -v0v2
 
-        let normal = simd_normalize(simd_cross(v0v1, v0v2))
-        let planeConstant = simd_dot(normal, vertices[0])
-        let nddot = simd_dot(normal, -direction)
+        let normal = normalize(cross(v0v1, v0v2))
+        let planeConstant = dp(normal, vertices[0])
+        let nddot = dp(normal, -direction)
 
         if nddot <= 0 {  // back side of triangle or the ray is parallel to the triangle.
             return
         }
 
-        let intersectionParameter = (planeConstant - simd_dot(normal, origin)) / -nddot // TODO fix negative sign (should be on origin?)
+        let intersectionParameter = (planeConstant - dp(normal, origin)) / -nddot // TODO fix negative sign (should be on origin?)
 
         if (intersectionParameter > 0) {
             let point : v3d = origin + intersectionParameter * direction
@@ -70,12 +70,12 @@ struct Triangle : RayIntersectable {
             let v1p = point - vertices[1]
             let v2p = point - vertices[2]
 
-            let a = simd_cross(v0v1, v0p)
-            let b = simd_cross(v1v2, v1p)
-            let c = simd_cross(v2v0, v2p)
-            if simd_dot(a, normal) >= 0 &&
-                simd_dot(b, normal) >= 0 &&
-                simd_dot(c, normal) >= 0 {
+            let a = cross(v0v1, v0p)
+            let b = cross(v1v2, v1p)
+            let c = cross(v2v0, v2p)
+            if dp(a, normal) >= 0 &&
+                dp(b, normal) >= 0 &&
+                dp(c, normal) >= 0 {
                 intersections.append(Intersection(atPoint: point, withNormal: normal, parameter: intersectionParameter, object: self))
             }
         }
@@ -97,8 +97,8 @@ struct Sphere : RayIntersectable {
                        direction : v3d,
                        intersections : inout [Intersection]) {
         let centerToEye = origin - center
-        let a = -simd_dot(direction, centerToEye)
-        let delta = pow(a, 2) - (simd_length_squared(centerToEye) - radiusSquared)
+        let a = -dp(direction, centerToEye)
+        let delta = pow(a, 2) - (lenSquared(centerToEye) - radiusSquared)
 
         if delta < 0 { // No intersections.
             return
@@ -121,7 +121,7 @@ struct Sphere : RayIntersectable {
 
         d.filter({ $0 >= 0.0000001 }).forEach() {
             let p : v3d = origin + $0 * direction
-            let normalAtPoint = simd_normalize(p - center)
+            let normalAtPoint = normalize(p - center)
             intersections.append(Intersection(atPoint: p,
                                               withNormal: normalAtPoint,
                                               parameter: $0,

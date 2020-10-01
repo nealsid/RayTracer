@@ -733,7 +733,7 @@
                                 <rect key="frame" x="819" y="16" width="185" height="16"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" alignment="right" id="xxb-gd-WjE">
-                                    <font key="font" metaFont="system"/>
+                                    <font key="font" size="13" name="AmericanTypewriter"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
@@ -744,7 +744,7 @@
                                     <constraint firstAttribute="width" constant="64" id="jJj-zY-VD6"/>
                                 </constraints>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="0" id="DVM-Fu-gE9">
-                                    <font key="font" metaFont="system"/>
+                                    <font key="font" size="13" name="AmericanTypewriter"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
@@ -752,7 +752,7 @@
                             <textField verticalHuggingPriority="750" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="23g-fw-MqQ">
                                 <rect key="frame" x="400" y="16" width="250" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="/" id="4dR-wZ-K52">
-                                    <font key="font" metaFont="system"/>
+                                    <font key="font" size="13" name="AmericanTypewriter"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
@@ -760,7 +760,7 @@
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0GL-oJ-gnT">
                                 <rect key="frame" x="427" y="16" width="113" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" id="HhW-qv-YRS">
-                                    <font key="font" metaFont="system"/>
+                                    <font key="font" size="13" name="AmericanTypewriter"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>

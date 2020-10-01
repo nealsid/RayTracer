@@ -33,8 +33,23 @@ struct Intersection {
     }
 }
 
-func dp<T : FloatingPoint>(a : v3<T>, b : v3<T>) -> T {
+func dp<T : FloatingPoint>(_ a : v3<T>, _ b : v3<T>) -> T {
     return a.x * b.x + a.y * b.y + a.z * b.z
+}
+
+func normalize<T : FloatingPoint>(_ a : v3<T>) -> v3<T> {
+    let length = sqrt(dp(a, a))
+    return v3<T>(a.x / length, a.y / length, a.z / length)
+}
+
+func cross<T : FloatingPoint>(_ a: v3<T>, _ b : v3<T>) -> v3<T> {
+    return v3<T>(a.y * b.z - a.z * b.y,
+                 a.z * b.x - a.x * b.z,
+                 a.x * b.y - a.y * b.x)
+}
+
+func lenSquared<T : FloatingPoint>(_ a : v3<T>) -> T {
+    return a.x * a.x + a.y * a.y + a.z * a.z
 }
 
 func traceRay(origin: v3d,
@@ -49,12 +64,12 @@ func traceRay(origin: v3d,
 func getPlaneVectors(origin : v3d,
                      direction : v3d,
                      focalLength : Double) -> (v3d, v3d) {
-    let planeNormal = simd_normalize(-direction)
+    let planeNormal = normalize(-direction)
     let up = v3d(0, 1, 0)
 
     // calculate horizontal & vertical focal plane vectors
-    let u = simd_normalize(simd_cross(up, planeNormal))
-    let v = simd_cross(planeNormal, u)
+    let u = normalize(cross(up, planeNormal))
+    let v = cross(planeNormal, u)
 
     return (u,v)
 }
@@ -69,6 +84,7 @@ func raytraceWorld(camera : v3d,
                    outputBitmap : inout [UInt8],
                    pixelDone :  (() -> Void)?) {
     let imageCenterCoordinate = camera + focalLength * cameraDirection
+    var output = outputBitmap
 
     let (u, v) : (v3d, v3d) = getPlaneVectors(origin: camera, direction: cameraDirection, focalLength: focalLength)
 
@@ -85,51 +101,54 @@ func raytraceWorld(camera : v3d,
     
     let columnMultiplier = imageWidth * 4
     let subdivision : Double = 0.25
-
+    let group = DispatchGroup()
     for i in 0..<imageWidth {
         let rowOffset = i * 4
         for j in 0..<imageHeight {
             let firstByte = j * columnMultiplier + rowOffset
-            var pixelValues : [Double] = []
+//            DispatchQueue.global(qos: DispatchQoS.QoSClass.userInteractive).async(group: group) {
+                var pixelValues : [Double] = []
+                for x in stride(from: Double(i), to: Double(i+1), by: subdivision) {
+                    for y in stride(from: Double(j), to: Double(j+1), by: subdivision) {
 
-            for x in stride(from: Double(i), to: Double(i+1), by: subdivision) {
-                for y in stride(from: Double(j), to: Double(j+1), by: subdivision) {
+                        let cameraToPixelVector = pixLocation(x, y) - camera
+                        let c2punit = normalize(cameraToPixelVector)
+                        var intersections : [Intersection] = []
+                        traceRay(origin: camera, direction: c2punit, objects: objects, intersections: &intersections)
 
-                    let cameraToPixelVector = pixLocation(x, y) - camera
-                    let c2punit = simd_normalize(cameraToPixelVector)
-                    var intersections : [Intersection] = []
-                    traceRay(origin: camera, direction: c2punit, objects: objects, intersections: &intersections)
+                        guard !intersections.isEmpty else {
+                            pixelValues.append(0)
+                            continue
+                        }
 
-                    guard !intersections.isEmpty else {
-                        pixelValues.append(0)
-                        continue
+//                        intersections.sort() { $0.parameter <= $1.parameter }
+
+                        // Take closest intersection
+                        let i1 = intersections[0]
+
+                        guard let normalAtIntersection = i1.normal else {
+                            continue
+                        }
+
+                        let intensityMultiplier = calculateLighting(atPoint: i1.point, fromLights: lights, withNormal: normalAtIntersection, worldObjects: objects)
+
+                        pixelValues.append(255 * intensityMultiplier)
                     }
-
-                    intersections.sort() { $0.parameter <= $1.parameter }
-
-                    // Take closest intersection
-                    let i1 = intersections[0]
-
-                    guard let normalAtIntersection = i1.normal else {
-                        continue
-                    }
-
-                    let intensityMultiplier = calculateLighting(atPoint: i1.point, fromLights: lights, withNormal: normalAtIntersection, worldObjects: objects)
-
-                    pixelValues.append(255 * intensityMultiplier)
                 }
-            }
-            var averageValue : Double = pixelValues.reduce(0, +)
+                var pixelValueSum : Double = pixelValues.reduce(0, +)
 
-            averageValue = averageValue / Double(pixelValues.count)
-            let avg : UInt8 = UInt8(averageValue)
-            outputBitmap[firstByte] = avg
-            outputBitmap[firstByte + 1] = avg
-            outputBitmap[firstByte + 2] = avg
-            outputBitmap[firstByte + 3] = 255
-            pixelDone?()
+                pixelValueSum = pixelValueSum / Double(pixelValues.count)
+                let avg : UInt8 = UInt8(pixelValueSum)
+                output[firstByte] = avg
+                output[firstByte + 1] = avg
+                output[firstByte + 2] = avg
+                output[firstByte + 3] = 255
+                pixelDone?()
+            }
         }
-    }
+//    }
+//    group.wait()
+    outputBitmap = output
 }
 
 func calculateLighting(atPoint point : v3d,
@@ -140,8 +159,8 @@ func calculateLighting(atPoint point : v3d,
 
     for l in lights {
         let i1ToPl = l.location - point
-        let pl = simd_normalize(i1ToPl)
-        let intensity = simd_dot(pl, normal)
+        let pl = normalize(i1ToPl)
+        let intensity = dp(pl, normal)
 
         if intensity <= 0 {
             continue
@@ -151,7 +170,6 @@ func calculateLighting(atPoint point : v3d,
         var objLightIntersections : [Intersection] = []
         traceRay(origin: point, direction: pl, objects: objects, intersections: &objLightIntersections)
         if objLightIntersections.count > 0 {
-            print("point->light intersection parameter: \(objLightIntersections[0].parameter)")
             continue
         }
         if intensity > 0 {
