@@ -47,6 +47,12 @@ class ViewController: NSViewController {
     var rtStart : Date!
     var rtEnd : Date!
 
+    @IBOutlet weak var totalPixelsLabel: NSTextField!
+    @IBOutlet weak var pixelCounterLabel: NSTextField!
+
+    var pixelCounter : Int = 0
+    let numberOfPixels : Int = imageWidth * imageHeight
+
     // The layer that contains the raytraced image
     let rayTraceImageLayer : CALayer = CALayer()
 
@@ -67,6 +73,7 @@ class ViewController: NSViewController {
     func initStopwatchTimer() {
         stopwatchDisplayTimer = Timer(timeInterval: 0.01, repeats: true) {_ in
             self.rtRenderingTime.stringValue = String(format:"%.3f seconds", Date().timeIntervalSince(self.rtStart))
+            self.pixelCounterLabel.stringValue = String(format:"%d", self.pixelCounter)
         }
         RunLoop.main.add(self.stopwatchDisplayTimer, forMode: RunLoop.Mode.default)
     }
@@ -76,6 +83,8 @@ class ViewController: NSViewController {
         rayTraceImageLayer.opacity = 0.0
 
         var rayTraceCGImage : CGImage!
+        pixelCounter = 0
+        totalPixelsLabel.stringValue = String(format: "%d pixels", numberOfPixels)
         rtStart = Date()
         initStopwatchTimer()
         DispatchQueue.global().async(group: group) { () in
@@ -90,7 +99,12 @@ class ViewController: NSViewController {
                           objects: /*[Sphere(v3d(0, 0, 0), 500),
                                     Sphere(v3d(0, 1000, 0), 500)],*/
                                    [Triangle([v3d(-500, -500, 0), v3d(500, -500, 0), v3d(-500, 500, 0)])],
-                          outputBitmap: &self.outputBitmap)
+                          outputBitmap: &self.outputBitmap,
+                          pixelDone: {
+                            self.pixelCounter += 1
+                }
+            )
+            self.stopwatchDisplayTimer.fire()
             self.stopwatchDisplayTimer.invalidate()
 
             self.outputBitmap.withUnsafeBytes() { (buffer : UnsafeRawBufferPointer) in

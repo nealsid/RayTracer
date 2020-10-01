@@ -705,7 +705,7 @@
         <scene sceneID="hIz-AP-VOD">
             <objects>
                 <viewController id="XfG-lQ-9wD" customClass="ViewController" customModule="RayTraceUI" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" wantsLayer="YES" misplaced="YES" id="m2S-Jp-Qdl">
+                    <view key="view" wantsLayer="YES" id="m2S-Jp-Qdl">
                         <rect key="frame" x="0.0" y="0.0" width="1024" height="782"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
@@ -716,9 +716,8 @@
                                     <constraint firstAttribute="width" constant="670" id="arC-9v-wVt"/>
                                 </constraints>
                             </customView>
-                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fSi-VN-dSh">
+                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="fSi-VN-dSh">
                                 <rect key="frame" x="14" y="734" width="308" height="32"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="push" title="Ray Trace" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="yl5-N5-S8h">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -739,20 +738,62 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="yYi-xQ-S1k">
+                                <rect key="frame" x="334" y="16" width="68" height="16"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="64" id="jJj-zY-VD6"/>
+                                </constraints>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="0" id="DVM-Fu-gE9">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField verticalHuggingPriority="750" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="23g-fw-MqQ">
+                                <rect key="frame" x="400" y="16" width="250" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="/" id="4dR-wZ-K52">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0GL-oJ-gnT">
+                                <rect key="frame" x="427" y="16" width="113" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" id="HhW-qv-YRS">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
                         </subviews>
                         <constraints>
-                            <constraint firstItem="XI8-iu-xEE" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="20" id="4M2-sb-YzB"/>
+                            <constraint firstItem="XI8-iu-xEE" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="14" id="4M2-sb-YzB"/>
+                            <constraint firstAttribute="bottom" secondItem="0GL-oJ-gnT" secondAttribute="bottom" constant="16" id="5bi-3a-6vy"/>
+                            <constraint firstItem="0GL-oJ-gnT" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="750" id="6jV-yr-8s6"/>
+                            <constraint firstAttribute="bottom" secondItem="23g-fw-MqQ" secondAttribute="bottom" constant="16" id="EqI-k8-8EN"/>
+                            <constraint firstItem="23g-fw-MqQ" firstAttribute="leading" secondItem="yYi-xQ-S1k" secondAttribute="trailing" constant="46" id="FRZ-SM-XyA"/>
                             <constraint firstItem="NBq-dw-7jf" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" id="FlU-9p-QEt"/>
+                            <constraint firstItem="fSi-VN-dSh" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="20" symbolic="YES" id="LVw-1W-QYC"/>
+                            <constraint firstItem="0GL-oJ-gnT" firstAttribute="leading" secondItem="23g-fw-MqQ" secondAttribute="trailing" constant="-112" id="LzM-E1-JEH"/>
+                            <constraint firstItem="XI8-iu-xEE" firstAttribute="leading" secondItem="fSi-VN-dSh" secondAttribute="trailing" constant="18" id="OLV-Yl-Dme"/>
                             <constraint firstAttribute="trailing" secondItem="XI8-iu-xEE" secondAttribute="trailing" constant="20" id="OxZ-bO-BNu"/>
+                            <constraint firstAttribute="bottom" secondItem="yYi-xQ-S1k" secondAttribute="bottom" constant="16" id="W6n-ZU-4Xf"/>
                             <constraint firstAttribute="bottom" secondItem="XI8-iu-xEE" secondAttribute="bottom" constant="40" id="XJF-DG-9jS"/>
+                            <constraint firstItem="23g-fw-MqQ" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="750" id="blY-mX-qbJ"/>
+                            <constraint firstItem="yYi-xQ-S1k" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="336" id="dAn-4h-Qjf"/>
+                            <constraint firstItem="fSi-VN-dSh" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="eni-fF-SQc"/>
                             <constraint firstItem="NBq-dw-7jf" firstAttribute="top" secondItem="XI8-iu-xEE" secondAttribute="bottom" constant="-1" id="mrD-ZM-ULu"/>
                             <constraint firstItem="XI8-iu-xEE" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="334" id="u1p-KU-S8l"/>
+                            <constraint firstItem="yYi-xQ-S1k" firstAttribute="top" secondItem="XI8-iu-xEE" secondAttribute="bottom" constant="8" id="vgo-DU-5we"/>
+                            <constraint firstAttribute="trailing" secondItem="0GL-oJ-gnT" secondAttribute="trailing" constant="444" id="yY7-Hu-6pn"/>
                             <constraint firstAttribute="trailing" secondItem="NBq-dw-7jf" secondAttribute="trailing" id="zbc-h5-gaQ"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="pixelCounterLabel" destination="yYi-xQ-S1k" id="mfX-nS-MPR"/>
                         <outlet property="rtRenderingTime" destination="A7j-ej-YHo" id="5ZB-Ft-ayH"/>
                         <outlet property="rtView" destination="XI8-iu-xEE" id="yfk-Wr-6Jh"/>
+                        <outlet property="totalPixelsLabel" destination="0GL-oJ-gnT" id="hXE-Tg-2cz"/>
                     </connections>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>

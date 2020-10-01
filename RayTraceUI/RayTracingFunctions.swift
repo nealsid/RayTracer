@@ -62,8 +62,10 @@ func raytraceWorld(camera : v3d,
                    imageHeight : Int,
                    lights : [PointLight],
                    objects : [RayIntersectable],
-                   outputBitmap : inout [UInt8]) {
+                   outputBitmap : inout [UInt8],
+                   pixelDone :  (() -> Void)?) {
     let imageCenterCoordinate = camera + focalLength * cameraDirection
+    var output = outputBitmap
 
     let (u, v) : (v3d, v3d) = getPlaneVectors(origin: camera, direction: cameraDirection, focalLength: focalLength)
 
@@ -80,50 +82,55 @@ func raytraceWorld(camera : v3d,
     
     let columnMultiplier = imageWidth * 4
     let subdivision : Double = 0.25
+    let group = DispatchGroup()
 
     for i in 0..<imageWidth {
         let rowOffset = i * 4
         for j in 0..<imageHeight {
             let firstByte = j * columnMultiplier + rowOffset
-            var pixelValues : [Double] = []
+            DispatchQueue.global().async(group: group) { () -> Void in
+                var pixelValues : [Double] = []
 
-            for x in stride(from: Double(i), to: Double(i+1), by: subdivision) {
-                for y in stride(from: Double(j), to: Double(j+1), by: subdivision) {
+                for x in stride(from: Double(i), to: Double(i+1), by: subdivision) {
+                    for y in stride(from: Double(j), to: Double(j+1), by: subdivision) {
 
-                    let cameraToPixelVector = pixLocation(x, y) - camera
-                    let c2punit = simd_normalize(cameraToPixelVector)
-                    var intersections : [Intersection] = []
-                    traceRay(origin: camera, direction: c2punit, objects: objects, intersections: &intersections)
+                        let cameraToPixelVector = pixLocation(x, y) - camera
+                        let c2punit = simd_normalize(cameraToPixelVector)
+                        var intersections : [Intersection] = []
+                        traceRay(origin: camera, direction: c2punit, objects: objects, intersections: &intersections)
 
-                    guard !intersections.isEmpty else {
-                        pixelValues.append(0)
-                        continue
+                        guard !intersections.isEmpty else {
+                            pixelValues.append(0)
+                            continue
+                        }
+
+                        intersections.sort() { $0.parameter <= $1.parameter }
+
+                        // Take closest intersection
+                        let i1 = intersections[0]
+
+                        guard let normalAtIntersection = i1.normal else {
+                            continue
+                        }
+
+                        let intensityMultiplier = calculateLighting(atPoint: i1.point, fromLights: lights, withNormal: normalAtIntersection, worldObjects: objects)
+
+                        pixelValues.append(255 * intensityMultiplier)
                     }
-
-                    intersections.sort() { $0.parameter <= $1.parameter }
-
-                    // Take closest intersection
-                    let i1 = intersections[0]
-
-                    guard let normalAtIntersection = i1.normal else {
-                        continue
-                    }
-
-                    let intensityMultiplier = calculateLighting(atPoint: i1.point, fromLights: lights, withNormal: normalAtIntersection, worldObjects: objects)
-
-                    pixelValues.append(255 * intensityMultiplier)
                 }
-            }
-            var averageValue : Double = pixelValues.reduce(0, +)
+                var averageValue : Double = pixelValues.reduce(0, +)
 
-            averageValue = averageValue / Double(pixelValues.count)
-            let avg : UInt8 = UInt8(averageValue)
-            outputBitmap[firstByte] = avg
-            outputBitmap[firstByte + 1] = avg
-            outputBitmap[firstByte + 2] = avg
-            outputBitmap[firstByte + 3] = 255
+                averageValue = averageValue / Double(pixelValues.count)
+                let avg : UInt8 = UInt8(averageValue)
+                output[firstByte] = avg
+                output[firstByte + 1] = avg
+                output[firstByte + 2] = avg
+                output[firstByte + 3] = 255
+                pixelDone?()
+            }
         }
     }
+    group.wait()
 }
 
 func calculateLighting(atPoint point : v3d,
