@@ -87,7 +87,8 @@ class ViewController: NSViewController {
         totalPixelsLabel.stringValue = String(format: "%d pixels", numberOfPixels)
         rtStart = Date()
         initStopwatchTimer()
-        DispatchQueue.global().async(group: group) { () in
+//        DispatchQueue.global().async(group: group) { () in
+        self.outputBitmap.withUnsafeMutableBufferPointer( { (buffer) in
             raytraceWorld(camera: v3d(0, 0, 1000),
                           cameraDirection: v3d(0, 0, -1),
                           focalLength: 800,
@@ -99,13 +100,14 @@ class ViewController: NSViewController {
                           objects: /*[Sphere(v3d(0, 0, 0), 500),
                                     Sphere(v3d(0, 1000, 0), 500)],*/
                                    [Triangle([v3d(-500, -500, 0), v3d(500, -500, 0), v3d(-500, 500, 0)])],
-                          outputBitmap: &self.outputBitmap,
+                          outputBitmap: buffer,
                           pixelDone: {
                             self.pixelCounter += 1
                 }
             )
-            self.stopwatchDisplayTimer.fire()
-            self.stopwatchDisplayTimer.invalidate()
+        })
+        self.stopwatchDisplayTimer.fire()
+        self.stopwatchDisplayTimer.invalidate()
 
             self.outputBitmap.withUnsafeBytes() { (buffer : UnsafeRawBufferPointer) in
                 rayTraceCGImage = CGImage(width: imageWidth,
@@ -126,7 +128,7 @@ class ViewController: NSViewController {
                                           intent: CGColorRenderingIntent.defaultIntent)!
             }
 
-            self.group.notify(queue: DispatchQueue.main) {
+//            self.group.notify(queue: DispatchQueue.main) {
                 self.rayTraceImageLayer.contents = rayTraceCGImage
                 let opacityAnimation = createOpacityAnimation(from: 0.0, to: 1.0, duration: 0.50, fadeInOut: false, repeatCount: 1)
                 self.rayTraceImageLayer.add(opacityAnimation, forKey: "opacity")
@@ -135,7 +137,7 @@ class ViewController: NSViewController {
                     self.snowGenerator.stop()
                     self.rayTraceImageLayer.removeAllAnimations()
                 }
-            }
-        }
+//            }
+//        }
     }
 }
