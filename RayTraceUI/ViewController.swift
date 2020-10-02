@@ -87,28 +87,31 @@ class ViewController: NSViewController {
         totalPixelsLabel.stringValue = String(format: "%d pixels", numberOfPixels)
         rtStart = Date()
         initStopwatchTimer()
-//        DispatchQueue.global().async(group: group) { () in
-        self.outputBitmap.withUnsafeMutableBufferPointer( { (buffer) in
+        DispatchQueue.global().async(group: group) { () in
             raytraceWorld(camera: v3d(0, 0, 1000),
                           cameraDirection: v3d(0, 0, -1),
-                          focalLength: 800,
-                          imageWidth: imageWidth,
-                          imageHeight: imageHeight,
+                          focalLength: 400,
+                          imageWidth: imageWidth - 1,
+                          imageHeight: imageHeight - 1,
                           lights: [PointLight(v3d(-500, -500, 25)),
                                    PointLight(v3d(500, -500, 25)),
                                    PointLight(v3d(-500, 500, 25))],
                           objects: /*[Sphere(v3d(0, 0, 0), 500),
-                                    Sphere(v3d(0, 1000, 0), 500)],*/
-                                   [Triangle([v3d(-500, -500, 0), v3d(500, -500, 0), v3d(-500, 500, 0)])],
-                          outputBitmap: buffer,
+                 Sphere(v3d(0, 1000, 0), 500)],*/
+                [/*Triangle([v3d(-500, -500, 0), v3d(500, -500, 0), v3d(-500, 500, 0)]),
+                 Triangle([v3d(-500, 500, 0), v3d(500, -500, 0), v3d(500, 500, 0)]),*/
+                Triangle([v3d(-500, -250, 0), v3d(500, -250, 0), v3d(-500, 0, -500)]),
+                Triangle([v3d(-500, 0, -500), v3d(500, -250, 0), v3d(500, 0, -500)]),
+                Triangle([v3d(-500, -500, 0), v3d(500, -500, 0), v3d(-500, -250, 0)]),
+                Triangle([v3d(-500, -250, 0), v3d(500, -500, 0), v3d(500, -250, 0)])],
+                          outputBitmap: &self.outputBitmap,
                           pixelDone: {
                             self.pixelCounter += 1
-                }
-            )
-        })
-        self.stopwatchDisplayTimer.fire()
-        self.stopwatchDisplayTimer.invalidate()
+            })
 
+            self.stopwatchDisplayTimer.fire()
+            self.stopwatchDisplayTimer.invalidate()
+            
             self.outputBitmap.withUnsafeBytes() { (buffer : UnsafeRawBufferPointer) in
                 rayTraceCGImage = CGImage(width: imageWidth,
                                           height: imageHeight,
@@ -121,14 +124,14 @@ class ViewController: NSViewController {
                                                                    data: buffer.baseAddress!,
                                                                    size: self.outputBitmap.count,
                                                                    releaseData: { (_, _, _) in
-
+                                                                    
                                           })!,
                                           decode: nil,
                                           shouldInterpolate: false,
                                           intent: CGColorRenderingIntent.defaultIntent)!
             }
-
-//            self.group.notify(queue: DispatchQueue.main) {
+            
+            self.group.notify(queue: DispatchQueue.main) {
                 self.rayTraceImageLayer.contents = rayTraceCGImage
                 let opacityAnimation = createOpacityAnimation(from: 0.0, to: 1.0, duration: 0.50, fadeInOut: false, repeatCount: 1)
                 self.rayTraceImageLayer.add(opacityAnimation, forKey: "opacity")
@@ -137,7 +140,8 @@ class ViewController: NSViewController {
                     self.snowGenerator.stop()
                     self.rayTraceImageLayer.removeAllAnimations()
                 }
-//            }
-//        }
+            }
+        }
     }
 }
+

@@ -84,7 +84,7 @@ func raytracePixels(ul : v3d,
                     endY : Int,
                     lights : [PointLight],
                     objects : [RayIntersectable],
-                    outputBitmap : UnsafeMutableBufferPointer<UInt8>,
+                    outputBitmap : inout [UInt8],
                     pixelDone : (() -> Void)?) {
     func pixLocation(_ i : Double, _ j : Double) -> v3d {
         let horizOffset = u * i
@@ -92,20 +92,21 @@ func raytracePixels(ul : v3d,
         return ul + horizOffset - vertOffset
     }
 
-    let columnMultiplier = imageWidth * 4
+    let rowBytesToSkip = imageWidth * 4
     let subdivision : Double = 0.25
-
     for i in startX...endX {
-        let rowOffset = i * 4
+        let horizontalOffset = i * 4
         for j in startY...endY {
-            let firstByte = j * columnMultiplier + rowOffset
             var pixelValues : [Double] = []
+            let firstByte = rowBytesToSkip * j + horizontalOffset
+
             for x in stride(from: Double(i), to: Double(i+1), by: subdivision) {
                 for y in stride(from: Double(j), to: Double(j+1), by: subdivision) {
 
                     let cameraToPixelVector = pixLocation(x, y) - camera
                     let c2punit = normalize(cameraToPixelVector)
                     var intersections : [Intersection] = []
+
                     traceRay(origin: camera, direction: c2punit, objects: objects, intersections: &intersections)
 
                     guard !intersections.isEmpty else {
@@ -113,9 +114,6 @@ func raytracePixels(ul : v3d,
                         continue
                     }
 
-                    //                        intersections.sort() { $0.parameter <= $1.parameter }
-
-                    // Take closest intersection
                     let i1 = intersections[0]
 
                     guard let normalAtIntersection = i1.normal else {
@@ -147,7 +145,7 @@ func raytraceWorld(camera : v3d,
                    imageHeight : Int,
                    lights : [PointLight],
                    objects : [RayIntersectable],
-                   outputBitmap : UnsafeMutableBufferPointer<UInt8>,
+                   outputBitmap : inout [UInt8],
                    pixelDone :  (() -> Void)?) {
     let imageCenterCoordinate = camera + focalLength * cameraDirection
     let (u, v) : (v3d, v3d) = getPlaneVectors(origin: camera, direction: cameraDirection, focalLength: focalLength)
@@ -158,25 +156,7 @@ func raytraceWorld(camera : v3d,
     let ul : v3d = imageCenterCoordinate - hpc + vpc
 
 
-    let group = DispatchGroup()
-    group.enter()
-    let t = Thread() {
-        raytracePixels(ul: ul, u: u, v: v, camera: camera, startX: 0, startY: 0, endX: imageWidth, endY: imageHeight/2, lights: lights, objects: objects, outputBitmap: outputBitmap, pixelDone: nil)
-        group.leave()
-        NSLog("t1 done")
-    }
-    group.enter()
-    let t1 = Thread() {
-        raytracePixels(ul: ul, u: u, v: v, camera: camera, startX: 0, startY: imageHeight/2, endX: imageWidth - 1, endY: imageHeight - 1, lights: lights, objects: objects, outputBitmap: outputBitmap, pixelDone: nil)
-        group.leave()
-        NSLog("t2 done")
-    }
-    t.name = "rt1"
-    t1.name = "rt2"
-    NSLog("Starting")
-    t.start()
-    t1.start()
-    group.wait()
+    raytracePixels(ul: ul, u: u, v: v, camera: camera, startX: 0, startY: 0, endX: imageWidth, endY: imageHeight, lights: lights, objects: objects, outputBitmap: &outputBitmap, pixelDone: pixelDone)
 }
 
 func calculateLighting(atPoint point : v3d,
@@ -197,11 +177,8 @@ func calculateLighting(atPoint point : v3d,
         // Now trace another ray to find objects in between current point and light.
         var objLightIntersections : [Intersection] = []
         traceRay(origin: point, direction: pl, objects: objects, intersections: &objLightIntersections)
-        if objLightIntersections.count > 0 {
-            continue
-        }
 
-        guard intensity > 0 else {
+        if !objLightIntersections.isEmpty {
             continue
         }
 
