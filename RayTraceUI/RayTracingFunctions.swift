@@ -59,6 +59,8 @@ func traceRay(origin: v3d,
     for o in objects {
         o.intersections(origin: origin, direction: direction, intersections: &intersections)
     }
+
+    
 }
 
 func getPlaneVectors(origin : v3d,

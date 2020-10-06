@@ -10,8 +10,8 @@ import Cocoa
 import CoreGraphics
 import simd
 
-let imageWidth : Int = 1000
-let imageHeight : Int = 1000
+let imageWidth : Int = 100
+let imageHeight : Int = 100
 
 func createOpacityAnimation(from : Float, to : Float, duration : Double, fadeInOut : Bool = true, repeatCount : Float = 100) -> CAAnimation {
     let opacityAnimation = CAKeyframeAnimation(keyPath: "opacity")
@@ -54,7 +54,7 @@ class ViewController: NSViewController {
 
     // The layer that contains the raytraced image
     let rayTraceImageLayer : CALayer = CALayer()
-    var t : [Triangle]!
+    var t : [RayIntersectable]!
     var rayTraceCGImage : CGImage!
     let viewUpdateTimer = DispatchSource.makeTimerSource()
 
@@ -75,7 +75,9 @@ class ViewController: NSViewController {
         openPanel.canChooseFiles = true;
         openPanel.runModal();
         let objFile = readObjFile(String(openPanel.url!.path))
-        t = createTriangleList(objFile)
+        let triangles = createTriangleList(objFile)
+        t = [Sphere(boundingObjects: triangles)]
+
     }
 
     func createTriangleList(_ o : ObjFile) -> [Triangle] {
@@ -113,9 +115,9 @@ class ViewController: NSViewController {
         rtStart = Date()
         initStopwatchTimer()
         DispatchQueue.global().async(group: group) { () in
-            raytraceWorld(camera: v3d(0, 0, 1000),
+            raytraceWorld(camera: v3d(0, 0, 100),
                           cameraDirection: v3d(0, 0, -1),
-                          focalLength: 400,
+                          focalLength: 80,
                           imageWidth: imageWidth - 1,
                           imageHeight: imageHeight - 1,
                           lights: [PointLight(v3d(-500, -500, 25)),

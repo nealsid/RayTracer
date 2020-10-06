@@ -13,10 +13,20 @@ protocol RayIntersectable {
     func intersections(origin: v3d,
                        direction: v3d,
                        intersections : inout [Intersection])
+
+    var isBounding : Bool { get }
+    func getBoundedIntersectables() -> [RayIntersectable]
+    func getXBounds() -> (Double, Double)
+    func getYBounds() -> (Double, Double)
+    func getZBounds() -> (Double, Double)
 }
 
 struct PointLight : RayIntersectable {
     let location : v3d
+    var isBounding { get {
+        return false
+        }
+    }
 
     init (_ location : v3d) {
         self.location = location
@@ -38,6 +48,10 @@ struct PointLight : RayIntersectable {
     func eq3<T : FloatingPoint>(_ a : T, _ b : T, _ c : T) -> Bool {
         return !a.isInfinite && a == b && b == c
     }
+
+    func getXBounds() -> (Double, Double) { (0, 0) }
+    func getYBounds() -> (Double, Double) { (0, 0) }
+    func getZBounds() -> (Double, Double) { (0, 0) }
 }
 
 struct Triangle : RayIntersectable {
@@ -46,6 +60,11 @@ struct Triangle : RayIntersectable {
     init(_ points : [v3d]) {
         self.vertices = points
         assert(points.count == 3)
+    }
+
+    var isBounding { get {
+        return false
+        }
     }
 
      func intersections(origin: v3d, direction: v3d, intersections: inout [Intersection]) {
@@ -76,9 +95,40 @@ struct Triangle : RayIntersectable {
             if dp(a, normal) >= 0 &&
                 dp(b, normal) >= 0 &&
                 dp(c, normal) >= 0 {
+                print("intersection")
                 intersections.append(Intersection(atPoint: point, withNormal: normal, parameter: intersectionParameter, object: self))
             }
         }
+    }
+
+    func getXBounds() -> (Double, Double) {
+        let minX = vertices.min() { (a, b) in
+            a.x < b.x
+            }!.x
+        let maxX = vertices.max() { (a, b) in
+            a.x > b.x
+            }!.x
+        return (minX, maxX)
+    }
+
+    func getYBounds() -> (Double, Double) {
+        let minY = vertices.min() { (a, b) in
+            a.y < b.y
+            }!.y
+        let maxY = vertices.max() { (a, b) in
+            a.y > b.y
+            }!.y
+        return (minY, maxY)
+    }
+
+    func getZBounds() -> (Double, Double) {
+        let minZ = vertices.min() { (a, b) in
+            a.z < b.z
+            }!.z
+        let maxZ = vertices.min() { (a, b) in
+            a.z > b.z
+            }!.z
+        return (minZ, maxZ)
     }
 }
 
@@ -86,11 +136,68 @@ struct Sphere : RayIntersectable {
     let center : v3d
     let radius : Double
     let radiusSquared : Double
+    let bounding : Bool
+    let boundedShapes : [RayIntersectable]
+
+    var isBounding {
+        get {
+            return bounding
+        }
+    }
 
     init(_ sphereCenter : v3d, _ sphereRadius : Double) {
         self.center = sphereCenter
         self.radius = sphereRadius
         self.radiusSquared = pow(self.radius, 2)
+        self.bounding = false
+        self.boundedShapes = []
+    }
+
+    init(boundingObjects : [RayIntersectable]) {
+        var minX, maxX, minY, maxY, minZ, maxZ : Double
+        minX = Double.infinity
+        minY = Double.infinity
+        minZ = Double.infinity
+        maxX = -Double.infinity
+        maxY = -Double.infinity
+        maxZ = -Double.infinity
+
+        for intersectable in boundingObjects {
+            let xBounds = intersectable.getXBounds()
+            let yBounds = intersectable.getYBounds()
+            let zBounds = intersectable.getZBounds()
+            if minX > xBounds.0 {
+                minX = xBounds.0
+            }
+            if maxX < xBounds.1 {
+                maxX = xBounds.1
+            }
+            if minY > yBounds.0 {
+                minY = yBounds.0
+            }
+            if maxY < yBounds.1 {
+                maxY = yBounds.1
+            }
+            if minZ > zBounds.0 {
+                minZ = zBounds.0
+            }
+            if maxZ < zBounds.1 {
+                maxZ = zBounds.1
+            }
+        }
+
+        let xDistance = maxX - minX
+        let yDistance = maxY - minY
+        let zDistance = maxZ - minZ
+        self.radius = [xDistance, yDistance, zDistance].max()!
+        self.center = v3d(maxX - (xDistance / 2),
+                          maxY - (yDistance / 2),
+                          maxZ - (zDistance / 2))
+
+        self.radiusSquared = pow(self.radius, 2)
+        self.isBounding = true
+        self.boundedShapes = boundingObjects
+
     }
 
     func intersections(origin : v3d,
@@ -128,4 +235,8 @@ struct Sphere : RayIntersectable {
                                               object : self))
         }
     }
+
+    func getXBounds() -> (Double, Double) { (0, 0) }
+    func getYBounds() -> (Double, Double) { (0, 0) }
+    func getZBounds() -> (Double, Double) { (0, 0) }
 }
