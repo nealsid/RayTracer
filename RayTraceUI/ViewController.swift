@@ -13,23 +13,6 @@ import simd
 let imageWidth : Int = 500
 let imageHeight : Int = 500
 
-func createOpacityAnimation(from : Float, to : Float, duration : Double, fadeInOut : Bool = true, repeatCount : Float = 100) -> CAAnimation {
-    let opacityAnimation = CAKeyframeAnimation(keyPath: "opacity")
-
-    if (fadeInOut) {
-        opacityAnimation.values = [from, to, from]
-        opacityAnimation.keyTimes = [0, 0.5, 1]
-    } else {
-        opacityAnimation.values = [from, to]
-        opacityAnimation.keyTimes = [0, 1]
-    }
-
-    opacityAnimation.duration = duration
-    opacityAnimation.repeatCount = repeatCount
-    opacityAnimation.fillMode = CAMediaTimingFillMode.forwards
-    return opacityAnimation
-}
-
 class ViewController: NSViewController {
     var outputBitmap : [UInt8] = ([UInt8])(repeating: 0, count: 4 * imageWidth * imageHeight)
     let group = DispatchGroup()

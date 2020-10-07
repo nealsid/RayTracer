@@ -9,6 +9,15 @@
 import Foundation
 import simd
 
+enum BoundsDictKey {
+    case MINX
+    case MAXX
+    case MINY
+    case MAXY
+    case MINZ
+    case MAXZ
+}
+
 protocol RayIntersectable {
     func intersections(origin: v3d,
                        direction: v3d,
@@ -16,21 +25,11 @@ protocol RayIntersectable {
 
     var isBounding : Bool { get }
     func getBoundedIntersectables() -> [RayIntersectable]
-    func getXBounds() -> (Double, Double)
-    func getYBounds() -> (Double, Double)
-    func getZBounds() -> (Double, Double)
+    func getBounds() -> [BoundsDictKey : Double]
 }
 
 struct PointLight : RayIntersectable {
     let location : v3d
-    var isBounding : Bool { get {
-        return false
-        }
-    }
-
-    func getBoundedIntersectables() -> [RayIntersectable] {
-        return []
-    }
 
     init (_ location : v3d) {
         self.location = location
@@ -53,9 +52,26 @@ struct PointLight : RayIntersectable {
         return !a.isInfinite && a == b && b == c
     }
 
-    func getXBounds() -> (Double, Double) { (0, 0) }
-    func getYBounds() -> (Double, Double) { (0, 0) }
-    func getZBounds() -> (Double, Double) { (0, 0) }
+    var isBounding : Bool {
+        get {
+            return false
+        }
+    }
+
+    func getBoundedIntersectables() -> [RayIntersectable] {
+        return []
+    }
+
+    func getBounds() -> [BoundsDictKey : Double] {
+        return [
+            .MINX : location.x,
+            .MAXX : location.x,
+            .MINY : location.y,
+            .MAXY : location.y,
+            .MINZ : location.z,
+            .MAXZ : location.z
+        ]
+    }
 }
 
 struct Triangle : RayIntersectable {
@@ -104,40 +120,43 @@ struct Triangle : RayIntersectable {
             if dp(a, normal) >= 0 &&
                 dp(b, normal) >= 0 &&
                 dp(c, normal) >= 0 {
-                print("intersection")
                 intersections.append(Intersection(atPoint: point, withNormal: normal, parameter: intersectionParameter, object: self))
             }
         }
     }
 
-    func getXBounds() -> (Double, Double) {
-        let minX = vertices.min() { (a, b) in
-            a.x < b.x
-            }!.x
-        let maxX = vertices.max() { (a, b) in
-            a.x > b.x
-            }!.x
-        return (minX, maxX)
-    }
+    func getBounds() -> [BoundsDictKey : Double] {
+        var minX, maxX, minY, maxY, minZ, maxZ : Double
+        minX = Double.infinity
+        minY = Double.infinity
+        minZ = Double.infinity
+        maxX = -Double.infinity
+        maxY = -Double.infinity
+        maxZ = -Double.infinity
 
-    func getYBounds() -> (Double, Double) {
-        let minY = vertices.min() { (a, b) in
-            a.y < b.y
-            }!.y
-        let maxY = vertices.max() { (a, b) in
-            a.y > b.y
-            }!.y
-        return (minY, maxY)
-    }
+        vertices.forEach { (vertex : v3d) in
+            setOnCondition(A : &minX, toB : vertex.x, ifTrue : >)
+            setOnCondition(A : &minY, toB : vertex.y, ifTrue : >)
+            setOnCondition(A : &minZ, toB : vertex.z, ifTrue : >)
+            setOnCondition(A : &maxX, toB : vertex.x, ifTrue : <)
+            setOnCondition(A : &maxY, toB : vertex.y, ifTrue : <)
+            setOnCondition(A : &maxZ, toB : vertex.z, ifTrue : <)
 
-    func getZBounds() -> (Double, Double) {
-        let minZ = vertices.min() { (a, b) in
-            a.z < b.z
-            }!.z
-        let maxZ = vertices.min() { (a, b) in
-            a.z > b.z
-            }!.z
-        return (minZ, maxZ)
+        }
+        return [
+            .MINX : minX,
+            .MAXX : maxX,
+            .MINY : minY,
+            .MAXY : maxY,
+            .MINZ : minZ,
+            .MAXZ : maxZ
+        ]
+    }
+}
+
+func setOnCondition<T>(A : inout T, toB : T, ifTrue : (T, T) -> Bool) {
+    if ifTrue(A, toB) {
+        A = toB
     }
 }
 
@@ -166,27 +185,14 @@ struct Sphere : RayIntersectable {
         maxZ = -Double.infinity
 
         for intersectable in boundingObjects {
-            let xBounds = intersectable.getXBounds()
-            let yBounds = intersectable.getYBounds()
-            let zBounds = intersectable.getZBounds()
-            if minX > xBounds.0 {
-                minX = xBounds.0
-            }
-            if maxX < xBounds.1 {
-                maxX = xBounds.1
-            }
-            if minY > yBounds.0 {
-                minY = yBounds.0
-            }
-            if maxY < yBounds.1 {
-                maxY = yBounds.1
-            }
-            if minZ > zBounds.0 {
-                minZ = zBounds.0
-            }
-            if maxZ < zBounds.1 {
-                maxZ = zBounds.1
-            }
+            let boundsDict = intersectable.getBounds()
+
+            setOnCondition(A: &minX, toB: boundsDict[.MINX]!, ifTrue: >)
+            setOnCondition(A: &minY, toB: boundsDict[.MINY]!, ifTrue: >)
+            setOnCondition(A: &minZ, toB: boundsDict[.MINZ]!, ifTrue: >)
+            setOnCondition(A: &maxX, toB: boundsDict[.MAXX]!, ifTrue: <)
+            setOnCondition(A: &maxY, toB: boundsDict[.MAXY]!, ifTrue: <)
+            setOnCondition(A: &maxZ, toB: boundsDict[.MAXZ]!, ifTrue: <)
         }
 
         let xDistance = maxX - minX
@@ -238,9 +244,16 @@ struct Sphere : RayIntersectable {
         }
     }
 
-    func getXBounds() -> (Double, Double) { (0, 0) }
-    func getYBounds() -> (Double, Double) { (0, 0) }
-    func getZBounds() -> (Double, Double) { (0, 0) }
+    func getBounds() -> [BoundsDictKey : Double] {
+        return [
+            .MINX : center.x - radius,
+            .MAXX : center.x + radius,
+            .MINY : center.y - radius,
+            .MAXY : center.y + radius,
+            .MINZ : center.z - radius,
+            .MAXZ : center.z + radius
+        ]
+    }
 
     func getBoundedIntersectables() -> [RayIntersectable] {
         return boundedShapes
