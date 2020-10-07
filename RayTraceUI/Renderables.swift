@@ -23,9 +23,13 @@ protocol RayIntersectable {
 
 struct PointLight : RayIntersectable {
     let location : v3d
-    var isBounding { get {
+    var isBounding : Bool { get {
         return false
         }
+    }
+
+    func getBoundedIntersectables() -> [RayIntersectable] {
+        return []
     }
 
     init (_ location : v3d) {
@@ -62,12 +66,17 @@ struct Triangle : RayIntersectable {
         assert(points.count == 3)
     }
 
-    var isBounding { get {
+    var isBounding : Bool { get {
         return false
         }
     }
 
-     func intersections(origin: v3d, direction: v3d, intersections: inout [Intersection]) {
+    func getBoundedIntersectables() -> [RayIntersectable] {
+        return []
+    }
+
+
+    func intersections(origin: v3d, direction: v3d, intersections: inout [Intersection]) {
         let v0v1 = vertices[1] - vertices[0]
         let v0v2 = vertices[2] - vertices[0]
         let v1v2 = vertices[2] - vertices[1]
@@ -139,12 +148,6 @@ struct Sphere : RayIntersectable {
     let bounding : Bool
     let boundedShapes : [RayIntersectable]
 
-    var isBounding {
-        get {
-            return bounding
-        }
-    }
-
     init(_ sphereCenter : v3d, _ sphereRadius : Double) {
         self.center = sphereCenter
         self.radius = sphereRadius
@@ -195,9 +198,8 @@ struct Sphere : RayIntersectable {
                           maxZ - (zDistance / 2))
 
         self.radiusSquared = pow(self.radius, 2)
-        self.isBounding = true
         self.boundedShapes = boundingObjects
-
+        self.bounding = true
     }
 
     func intersections(origin : v3d,
@@ -239,4 +241,14 @@ struct Sphere : RayIntersectable {
     func getXBounds() -> (Double, Double) { (0, 0) }
     func getYBounds() -> (Double, Double) { (0, 0) }
     func getZBounds() -> (Double, Double) { (0, 0) }
+
+    func getBoundedIntersectables() -> [RayIntersectable] {
+        return boundedShapes
+    }
+
+    var isBounding : Bool {
+        get {
+            return bounding
+        }
+    }
 }

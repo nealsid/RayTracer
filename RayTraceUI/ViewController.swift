@@ -10,8 +10,8 @@ import Cocoa
 import CoreGraphics
 import simd
 
-let imageWidth : Int = 100
-let imageHeight : Int = 100
+let imageWidth : Int = 500
+let imageHeight : Int = 500
 
 func createOpacityAnimation(from : Float, to : Float, duration : Double, fadeInOut : Bool = true, repeatCount : Float = 100) -> CAAnimation {
     let opacityAnimation = CAKeyframeAnimation(keyPath: "opacity")

@@ -116,13 +116,22 @@ func raytracePixels(ul : v3d,
                         continue
                     }
 
-                    let i1 = intersections[0]
+                    var i1 = intersections[0]
 
-                    guard let normalAtIntersection = i1.normal else {
-                        continue
+                    if i1.object.isBounding {
+                        let boundedShapes = i1.object.getBoundedIntersectables()
+                        var boundedShapeIntersections : [Intersection] = []
+                        traceRay(origin: camera, direction: c2punit, objects: boundedShapes, intersections: &boundedShapeIntersections)
+                        guard !boundedShapeIntersections.isEmpty else {
+                            pixelValues.append(0)
+                            continue
+                        }
+                        i1 = boundedShapeIntersections[0]
                     }
 
-                    let intensityMultiplier = calculateLighting(atPoint: i1.point, fromLights: lights, withNormal: normalAtIntersection, worldObjects: objects)
+                    let intensityMultiplier = calculateLighting(atIntersection: i1,
+                                                                fromLights: lights,
+                                                                worldObjects: objects)
 
                     pixelValues.append(255 * intensityMultiplier)
                 }
@@ -161,12 +170,15 @@ func raytraceWorld(camera : v3d,
     raytracePixels(ul: ul, u: u, v: v, camera: camera, startX: 0, startY: 0, endX: imageWidth, endY: imageHeight, lights: lights, objects: objects, outputBitmap: &outputBitmap, pixelDone: pixelDone)
 }
 
-func calculateLighting(atPoint point : v3d,
-                       fromLights lights : [PointLight],
-                       withNormal normal : v3d,
+func calculateLighting(atIntersection isect : Intersection,
+                       fromLights lights: [PointLight],
                        worldObjects objects : [RayIntersectable]) -> Double {
-    var intensityMultiplier : Double = 0.0
+    guard let normal = isect.normal else {
+        return 0.0
+    }
 
+    let point = isect.point
+    var intensityMultiplier : Double = 0.0
     for l in lights {
         let i1ToPl = l.location - point
         let pl = normalize(i1ToPl)
@@ -180,7 +192,9 @@ func calculateLighting(atPoint point : v3d,
         var objLightIntersections : [Intersection] = []
         traceRay(origin: point, direction: pl, objects: objects, intersections: &objLightIntersections)
 
-        if !objLightIntersections.isEmpty {
+        if !objLightIntersections.filter({ (i : Intersection) in
+            !i.object.isBounding
+        }).isEmpty {
             continue
         }
 
