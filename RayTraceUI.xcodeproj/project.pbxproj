@@ -12,6 +12,7 @@
 		F9245DAE250C345000C29093 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F9245DAD250C345000C29093 /* Assets.xcassets */; };
 		F9245DB1250C345000C29093 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F9245DAF250C345000C29093 /* Main.storyboard */; };
 		F942E22425283B7F006B4EFA /* ObjLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F942E22325283B7F006B4EFA /* ObjLoader.swift */; };
+		F942E226252FA6EB006B4EFA /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = F942E225252FA6EB006B4EFA /* Utilities.swift */; };
 		F94981B225130840003CA046 /* RayTracingFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F94981B125130840003CA046 /* RayTracingFunctions.swift */; };
 		F94981B4251D6604003CA046 /* Renderables.swift in Sources */ = {isa = PBXBuildFile; fileRef = F94981B3251D6604003CA046 /* Renderables.swift */; };
 		F9B72A16250DB0F600BE4875 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F9B72A15250DB0F600BE4875 /* CoreGraphics.framework */; };
@@ -26,6 +27,7 @@
 		F9245DB2250C345000C29093 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F9245DB3250C345000C29093 /* RayTraceUI.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RayTraceUI.entitlements; sourceTree = "<group>"; };
 		F942E22325283B7F006B4EFA /* ObjLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjLoader.swift; sourceTree = "<group>"; };
+		F942E225252FA6EB006B4EFA /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
 		F94981B125130840003CA046 /* RayTracingFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RayTracingFunctions.swift; sourceTree = "<group>"; };
 		F94981B3251D6604003CA046 /* Renderables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Renderables.swift; sourceTree = "<group>"; };
 		F9B72A15250DB0F600BE4875 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -68,6 +70,7 @@
 				F942E22325283B7F006B4EFA /* ObjLoader.swift */,
 				F94981B125130840003CA046 /* RayTracingFunctions.swift */,
 				F94981B3251D6604003CA046 /* Renderables.swift */,
+				F942E225252FA6EB006B4EFA /* Utilities.swift */,
 				F9245DAD250C345000C29093 /* Assets.xcassets */,
 				F9245DAF250C345000C29093 /* Main.storyboard */,
 				F9245DB2250C345000C29093 /* Info.plist */,
@@ -154,6 +157,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F942E226252FA6EB006B4EFA /* Utilities.swift in Sources */,
 				F9245DAC250C344E00C29093 /* ViewController.swift in Sources */,
 				F94981B225130840003CA046 /* RayTracingFunctions.swift in Sources */,
 				F942E22425283B7F006B4EFA /* ObjLoader.swift in Sources */,

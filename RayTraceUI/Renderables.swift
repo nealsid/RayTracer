@@ -141,8 +141,8 @@ struct Triangle : RayIntersectable {
             setOnCondition(A : &maxX, toB : vertex.x, ifTrue : <)
             setOnCondition(A : &maxY, toB : vertex.y, ifTrue : <)
             setOnCondition(A : &maxZ, toB : vertex.z, ifTrue : <)
-
         }
+
         return [
             .MINX : minX,
             .MAXX : maxX,
@@ -151,12 +151,6 @@ struct Triangle : RayIntersectable {
             .MINZ : minZ,
             .MAXZ : maxZ
         ]
-    }
-}
-
-func setOnCondition<T>(A : inout T, toB : T, ifTrue : (T, T) -> Bool) {
-    if ifTrue(A, toB) {
-        A = toB
     }
 }
 

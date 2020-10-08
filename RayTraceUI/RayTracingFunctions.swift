@@ -33,25 +33,6 @@ struct Intersection {
     }
 }
 
-func dp<T : FloatingPoint>(_ a : v3<T>, _ b : v3<T>) -> T {
-    return a.x * b.x + a.y * b.y + a.z * b.z
-}
-
-func normalize<T : FloatingPoint>(_ a : v3<T>) -> v3<T> {
-    let length = sqrt(dp(a, a))
-    return v3<T>(a.x / length, a.y / length, a.z / length)
-}
-
-func cross<T : FloatingPoint>(_ a: v3<T>, _ b : v3<T>) -> v3<T> {
-    return v3<T>(a.y * b.z - a.z * b.y,
-                 a.z * b.x - a.x * b.z,
-                 a.x * b.y - a.y * b.x)
-}
-
-func lenSquared<T : FloatingPoint>(_ a : v3<T>) -> T {
-    return a.x * a.x + a.y * a.y + a.z * a.z
-}
-
 func traceRay(origin: v3d,
               direction: v3d,
               objects: [RayIntersectable],
@@ -59,8 +40,6 @@ func traceRay(origin: v3d,
     for o in objects {
         o.intersections(origin: origin, direction: direction, intersections: &intersections)
     }
-
-    
 }
 
 func getPlaneVectors(origin : v3d,
@@ -80,10 +59,12 @@ func raytracePixels(ul : v3d,
                     u : v3d,
                     v : v3d,
                     camera : v3d,
-                    startX : Int,
-                    startY : Int,
-                    endX : Int,
-                    endY : Int,
+                    startX : Double,
+                    startY : Double,
+                    endX : Double,
+                    endY : Double,
+                    imageWidth : Int,
+                    imageHeight : Int,
                     lights : [PointLight],
                     objects : [RayIntersectable],
                     outputBitmap : inout [UInt8],
@@ -94,16 +75,19 @@ func raytracePixels(ul : v3d,
         return ul + horizOffset - vertOffset
     }
 
+    let uDirectionStep = (endX - startX) / Double(imageWidth)
+    let vDirectionStep = (endY - startY) / Double(imageHeight)
+
     let rowBytesToSkip = imageWidth * 4
     let subdivision : Double = 0.25
-    for i in startX...endX {
+    for i in stride(from: startX, to: endX, by: uDirectionStep) {
         let horizontalOffset = i * 4
-        for j in startY...endY {
+        for j in stride(from: startY, to: endY, by: vDirectionStep) {
             var pixelValues : [Double] = []
-            let firstByte = rowBytesToSkip * j + horizontalOffset
+            let firstByte = 0//rowBytesToSkip * j + horizontalOffset
 
-            for x in stride(from: Double(i), to: Double(i+1), by: subdivision) {
-                for y in stride(from: Double(j), to: Double(j+1), by: subdivision) {
+            for x in stride(from: Double(i), to: Double(i+uDirectionStep), by: subdivision) {
+                for y in stride(from: Double(j), to: Double(j+vDirectionStep), by: subdivision) {
 
                     let cameraToPixelVector = pixLocation(x, y) - camera
                     let c2punit = normalize(cameraToPixelVector)
@@ -149,6 +133,35 @@ func raytracePixels(ul : v3d,
     }
 }
 
+func getBounds(_ objects : [RayIntersectable]) -> [ BoundsDictKey : Double ] {
+    var minX, maxX, minY, maxY, minZ, maxZ : Double
+    minX = Double.infinity
+    minY = Double.infinity
+    minZ = Double.infinity
+    maxX = -Double.infinity
+    maxY = -Double.infinity
+    maxZ = -Double.infinity
+
+    for o in objects {
+        let boundsDict = o.getBounds()
+        setOnCondition(A: &minX, toB: boundsDict[.MINX]!, ifTrue: >)
+        setOnCondition(A: &minY, toB: boundsDict[.MINY]!, ifTrue: >)
+        setOnCondition(A: &minZ, toB: boundsDict[.MINZ]!, ifTrue: >)
+        setOnCondition(A: &maxX, toB: boundsDict[.MAXX]!, ifTrue: <)
+        setOnCondition(A: &maxY, toB: boundsDict[.MAXY]!, ifTrue: <)
+        setOnCondition(A: &maxZ, toB: boundsDict[.MAXZ]!, ifTrue: <)
+    }
+    
+    return [
+        .MINX : minX,
+        .MAXX : maxX,
+        .MINY : minY,
+        .MAXY : maxY,
+        .MINZ : minZ,
+        .MAXZ : maxZ
+    ]
+}
+
 func raytraceWorld(camera : v3d,
                    cameraDirection : v3d,
                    focalLength : Double,
@@ -160,14 +173,18 @@ func raytraceWorld(camera : v3d,
                    pixelDone :  (() -> Void)?) {
     let imageCenterCoordinate = camera + focalLength * cameraDirection
     let (u, v) : (v3d, v3d) = getPlaneVectors(origin: camera, direction: cameraDirection, focalLength: focalLength)
-
-    let hpc = u * (Double(imageWidth) / 2.0)
-    let vpc = v * (Double(imageHeight) / 2.0)
+    let worldBounds = getBounds(objects)
+    print(worldBounds)
+    print(imageCenterCoordinate)
+    let worldHorizontalRange = 500
+    let worldVerticalRange = 500
+    let hpc = u * (Double(worldHorizontalRange) / 2.0)
+    let vpc = v * (Double(worldVerticalRange) / 2.0)
 
     let ul : v3d = imageCenterCoordinate - hpc + vpc
 
 
-    raytracePixels(ul: ul, u: u, v: v, camera: camera, startX: 0, startY: 0, endX: imageWidth, endY: imageHeight, lights: lights, objects: objects, outputBitmap: &outputBitmap, pixelDone: pixelDone)
+//    raytracePixels(ul: ul, u: u, v: v, camera: camera, startX: 0, startY: 0, endX: imageWidth, endY: imageHeight, lights: lights, objects: objects, outputBitmap: &outputBitmap, pixelDone: pixelDone)
 }
 
 func calculateLighting(atIntersection isect : Intersection,
