@@ -10,8 +10,8 @@ import Cocoa
 import CoreGraphics
 import simd
 
-let imageWidth : Int = 500
-let imageHeight : Int = 500
+let imageWidth : Int = 1000
+let imageHeight : Int = 1000
 
 class ViewController: NSViewController {
     var outputBitmap : [UInt8] = ([UInt8])(repeating: 0, count: 4 * imageWidth * imageHeight)
@@ -98,22 +98,22 @@ class ViewController: NSViewController {
         rtStart = Date()
         initStopwatchTimer()
         DispatchQueue.global().async(group: group) { () in
-            raytraceWorld(camera: v3d(0, 0, 100),
+            raytraceWorld(camera: v3d(0, 0, 150),
                           cameraDirection: v3d(0, 0, -1),
-                          focalLength: 80,
+                          focalLength: 10,
                           imageWidth: imageWidth - 1,
                           imageHeight: imageHeight - 1,
                           lights: [PointLight(v3d(-500, -500, 25)),
                                    PointLight(v3d(500, -500, 25)),
                                    PointLight(v3d(-500, 500, 25))],
-                          objects: self.t,/*[Sphere(v3d(0, 0, 0), 500),
+                          objects: [Sphere(v3d(0, 0, 0), 50)],
 //                 Sphere(v3d(0, 1000, 0), 500)],
-                [Triangle([v3d(-500, -500, 0), v3d(500, -500, 0), v3d(-500, 500, 0)]),
-                 Triangle([v3d(-500, 500, 0), v3d(500, -500, 0), v3d(500, 500, 0)])],
-//                Triangle([v3d(-500, -250, 0), v3d(500, -250, 0), v3d(-500, 0, -500)]),
-//                Triangle([v3d(-500, 0, -500), v3d(500, -250, 0), v3d(500, 0, -500)]),
-//                Triangle([v3d(-500, -500, 0), v3d(500, -500, 0), v3d(-500, -250, 0)]),
-//                Triangle([v3d(-500, -250, 0), v3d(500, -500, 0), v3d(500, -250, 0)])], */
+/*                [Triangle([v3d(-500, -500, 0), v3d(500, -500, 0), v3d(-500, 500, 0)]),
+                 Triangle([v3d(-500, 500, 0), v3d(500, -500, 0), v3d(500, 500, 0)]),
+                Triangle([v3d(-500, -250, 0), v3d(500, -250, 0), v3d(-500, 0, -500)]),
+                Triangle([v3d(-500, 0, -500), v3d(500, -250, 0), v3d(500, 0, -500)]),
+                Triangle([v3d(-500, -500, 0), v3d(500, -500, 0), v3d(-500, -250, 0)]),
+                Triangle([v3d(-500, -250, 0), v3d(500, -500, 0), v3d(500, -250, 0)])],*/
                           outputBitmap: &self.outputBitmap,
                           pixelDone: {
                             self.pixelCounter += 1

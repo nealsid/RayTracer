@@ -14,16 +14,6 @@ func setOnCondition<T>(A : inout T, toB : T, ifTrue : (T, T) -> Bool) {
     }
 }
 
-extension Array {
-    mutating func forEachByRef(body : (_ el : inout Element) throws -> Void) {
-        for i in 0..<self.count {
-            try! withUnsafeMutablePointer(to: &self[i]) {
-                try body(&$0.pointee)
-            }
-        }
-    }
-}
-
 func dp<T : FloatingPoint>(_ a : v3<T>, _ b : v3<T>) -> T {
     return a.x * b.x + a.y * b.y + a.z * b.z
 }
