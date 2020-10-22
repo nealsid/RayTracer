@@ -55,39 +55,43 @@ func getPlaneVectors(origin : v3d,
     return (u,v)
 }
 
-func raytracePixels(ul : v3d,
+func raytracePixels(ul: v3d,
+                    ur: v3d,
+                    ll: v3d,
+                    lr: v3d,
                     u : v3d,
                     v : v3d,
                     camera : v3d,
-                    startX : Int,
-                    startY : Int,
-                    endX : Int,
-                    endY : Int,
+                    startXPixel : Int,
+                    startYPixel: Int,
+                    endXPixel : Int,
+                    endYPixel : Int,
                     lights : [PointLight],
                     objects : [RayIntersectable],
                     outputBitmap : inout [UInt8],
                     pixelDone : (() -> Void)?) {
-    let pixelsPerWorldUnit = 1.0
+    let pixelsPerWorldHorizontal =  Double(endXPixel - startXPixel) / sqrt(lenSquared(ur - ul))
+    let pixelsPerWorldVertical = Double(endYPixel - startYPixel) / sqrt(lenSquared(ll - ul))
 
-    func pixLocation(_ i : Double, _ j : Double) -> v3d {
-        let horizOffset = u * i / pixelsPerWorldUnit
-        let vertOffset = v * j / pixelsPerWorldUnit
-        return ul + horizOffset - vertOffset
+    func pixelToWorldCoordinate(_ i : Double, _ j : Double) -> v3d {
+        let uComponent = ((u * i) / pixelsPerWorldHorizontal)
+        let vComponent = ((v * j) / pixelsPerWorldVertical)
+        return ul + uComponent - vComponent
     }
 
     let rowBytesToSkip = imageWidth * 4
     let subdivision : Double = 1.0
 
-    for i in stride(from: startX, to: endX, by: 1) {
+    for i in stride(from: startXPixel, to: endXPixel, by: 1) {
         let horizontalOffset = i * 4
-        for j in stride(from: startY, to: endY, by: 1) {
+        for j in stride(from: startYPixel, to: endYPixel, by: 1) {
             var pixelValues : [Double] = []
             let firstByte = rowBytesToSkip * j + horizontalOffset
 
             for x in stride(from: Double(i), to: Double(i+1), by: subdivision) {
                 for y in stride(from: Double(j), to: Double(j+1), by: subdivision) {
 
-                    let cameraToPixelVector = pixLocation(x, y) - camera
+                    let cameraToPixelVector = pixelToWorldCoordinate(x, y) - camera
                     let c2punit = normalize(cameraToPixelVector)
                     var intersections : [Intersection] = []
                     traceRay(origin: camera, direction: c2punit, objects: objects, intersections: &intersections)
@@ -162,34 +166,45 @@ func getBounds(_ objects : [RayIntersectable]) -> [ BoundsDictKey : Double ] {
 func raytraceWorld(camera : v3d,
                    cameraDirection : v3d,
                    focalLength : Double,
-                   imageWidth : Int,
-                   imageHeight : Int,
+                   imageWidthPixels : Int,
+                   imageHeightPixels : Int,
                    lights : [PointLight],
                    objects : [RayIntersectable],
                    outputBitmap : inout [UInt8],
                    pixelDone :  (() -> Void)?) {
     let imageCenterCoordinate = camera + focalLength * cameraDirection
-    let (u, v) : (v3d, v3d) = getPlaneVectors(origin: camera, direction: cameraDirection, focalLength: focalLength)
+    let (u, v) : (v3d, v3d) = getPlaneVectors(origin: camera,
+                                              direction: cameraDirection,
+                                              focalLength: focalLength)
     let worldBounds = getBounds(objects)
     print(worldBounds)
     print(imageCenterCoordinate)
-    let worldHorizontalRange = 100.0
-    let worldVerticalRange = 100.0
+    let worldHorizontalRange = 10.0
+    let worldVerticalRange = 10.0
     let hpc = u * (Double(worldHorizontalRange) / 2.0)
     let vpc = v * (Double(worldVerticalRange) / 2.0)
 
     let ul : v3d = imageCenterCoordinate - hpc + vpc
     let ur : v3d = imageCenterCoordinate + hpc + vpc
     let ll : v3d = imageCenterCoordinate - hpc - vpc
-    let lr : v3d - imageCenterCoordinate + hpc - vpc
+    let lr : v3d = imageCenterCoordinate + hpc - vpc
     print(ul)
 
     raytracePixels(ul: ul,
+                   ur: ur,
+                   ll: ll,
+                   lr: lr,
                    u: u,
                    v: v,
                    camera: camera,
-                   startX: 0, startY: 0, endX: imageWidth, endY: imageHeight,
-                   lights: lights, objects: objects, outputBitmap: &outputBitmap, pixelDone: pixelDone)
+                   startXPixel: 0,
+                   startYPixel: 0,
+                   endXPixel: imageWidth,
+                   endYPixel: imageHeight,
+                   lights: lights,
+                   objects: objects,
+                   outputBitmap: &outputBitmap,
+                   pixelDone: pixelDone)
 }
 
 func calculateLighting(atIntersection isect : Intersection,
