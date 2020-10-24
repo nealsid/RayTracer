@@ -1,4 +1,4 @@
-Simple ray tracer in Swift.
+Simple ray tracer in Swift with antialiasing and bounding sphere calculation.
 
 ## Example image
 Origins of the Pig from https://www.cs.cmu.edu/~kmcrane/Projects/ModelRepository/
