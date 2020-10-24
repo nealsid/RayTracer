@@ -9,7 +9,7 @@
 import Foundation
 
 struct WorldCoordinate {
-    let p : v3d
+    let p : [v3d]
     let xPixel : Int
     let yPixel : Int
 }
@@ -65,17 +65,15 @@ struct WorldCoordinateSequence : Sequence, IteratorProtocol {
         return ul + uComponent - vComponent
     }
 
-    mutating func next() -> [WorldCoordinate]? {
+    mutating func next() -> WorldCoordinate? {
         if (currentXPixel == endXPixel + 1) {
             return nil
         }
-        var worldPoints : [WorldCoordinate] = []
-
+        var points : [v3d] = []
+        
         for x in stride(from: Double(currentXPixel), to: Double(currentXPixel+1), by: pixelSubdivision) {
             for y in stride(from: Double(currentYPixel), to: Double(currentYPixel+1), by: pixelSubdivision) {
-                let currentPixelInWorldCoordinates = pixelToWorldCoordinate(x, y)
-                let worldPoint = WorldCoordinate(p: currentPixelInWorldCoordinates, xPixel: currentXPixel, yPixel: currentYPixel)
-                worldPoints.append(worldPoint)
+                points.append(pixelToWorldCoordinate(x, y))
             }
         }
 
@@ -85,6 +83,6 @@ struct WorldCoordinateSequence : Sequence, IteratorProtocol {
             currentXPixel += 1
             currentYPixel = startYPixel
         }
-        return worldPoints
+        return WorldCoordinate(p: points, xPixel: currentXPixel, yPixel: currentYPixel)
     }
 }

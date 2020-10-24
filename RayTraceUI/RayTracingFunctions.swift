@@ -55,83 +55,111 @@ func getPlaneVectors(origin : v3d,
     return (u,v)
 }
 
-func raytracePixels(ul: v3d,
-                    ur: v3d,
-                    ll: v3d,
-                    lr: v3d,
-                    u : v3d,
-                    v : v3d,
+func raytracePixels(worldCoordinates : WorldCoordinateSequence,
                     camera : v3d,
-                    startXPixel : Int,
-                    startYPixel: Int,
-                    endXPixel : Int,
-                    endYPixel : Int,
                     lights : [PointLight],
                     objects : [RayIntersectable],
                     outputBitmap : inout [UInt8],
                     pixelDone : (() -> Void)?) {
-    let pixelsPerWorldHorizontal =  Double(endXPixel - startXPixel) / sqrt(lenSquared(ur - ul))
-    let pixelsPerWorldVertical = Double(endYPixel - startYPixel) / sqrt(lenSquared(ll - ul))
+    let bytesPerRow = worldCoordinates.endXPixel * 4
 
-    func pixelToWorldCoordinate(_ i : Double, _ j : Double) -> v3d {
-        let uComponent = ((u * i) / pixelsPerWorldHorizontal)
-        let vComponent = ((v * j) / pixelsPerWorldVertical)
-        return ul + uComponent - vComponent
-    }
+    for w in worldCoordinates {
+        var pixelValues : [Double] = []
 
-    let rowBytesToSkip = imageWidth * 4
-    let subdivision : Double = 1.0
+        for focalPlanePoint in w.p {
+            let c2punit = normalize(focalPlanePoint - camera)
+            var intersections : [Intersection] = []
 
-    for i in stride(from: startXPixel, to: endXPixel, by: 1) {
-        let horizontalOffset = i * 4
-        for j in stride(from: startYPixel, to: endYPixel, by: 1) {
-            var pixelValues : [Double] = []
-            let firstByte = rowBytesToSkip * j + horizontalOffset
+            traceRay(origin: camera, direction: c2punit, objects: objects, intersections: &intersections)
 
-            for x in stride(from: Double(i), to: Double(i+1), by: subdivision) {
-                for y in stride(from: Double(j), to: Double(j+1), by: subdivision) {
-
-                    let cameraToPixelVector = pixelToWorldCoordinate(x, y) - camera
-                    let c2punit = normalize(cameraToPixelVector)
-                    var intersections : [Intersection] = []
-                    traceRay(origin: camera, direction: c2punit, objects: objects, intersections: &intersections)
-
-                    guard !intersections.isEmpty else {
-                        pixelValues.append(0)
-                        continue
-                    }
-                    print("intersection")
-                    var i1 = intersections[0]
-
-                    if i1.object.isBounding {
-                        let boundedShapes = i1.object.getBoundedIntersectables()
-                        var boundedShapeIntersections : [Intersection] = []
-                        traceRay(origin: camera, direction: c2punit, objects: boundedShapes, intersections: &boundedShapeIntersections)
-                        guard !boundedShapeIntersections.isEmpty else {
-                            pixelValues.append(0)
-                            continue
-                        }
-                        i1 = boundedShapeIntersections[0]
-                    }
-
-                    let intensityMultiplier = calculateLighting(atIntersection: i1,
-                                                                fromLights: lights,
-                                                                worldObjects: objects)
-
-                    pixelValues.append(255 * intensityMultiplier)
-                }
+            guard !intersections.isEmpty else {
+                pixelValues.append(0)
+                continue
             }
-            var pixelValueSum : Double = pixelValues.reduce(0, +)
+            
+            print("intersection")
+            var i1 = intersections[0]
 
-            pixelValueSum = pixelValueSum / Double(pixelValues.count)
-            let avg : UInt8 = UInt8(pixelValueSum)
-            outputBitmap[firstByte] = avg
-            outputBitmap[firstByte + 1] = avg
-            outputBitmap[firstByte + 2] = avg
-            outputBitmap[firstByte + 3] = 255
-            pixelDone?()
+            if i1.object.isBounding {
+                let boundedShapes = i1.object.getBoundedIntersectables()
+                var boundedShapeIntersections : [Intersection] = []
+                traceRay(origin: camera, direction: c2punit, objects: boundedShapes, intersections: &boundedShapeIntersections)
+                guard !boundedShapeIntersections.isEmpty else {
+                    pixelValues.append(0)
+                    continue
+                }
+                i1 = boundedShapeIntersections[0]
+            }
+
+            let intensityMultiplier = calculateLighting(atIntersection: i1,
+                                                        fromLights: lights,
+                                                        worldObjects: objects)
+
+            pixelValues.append(255 * intensityMultiplier)
         }
+        var pixelValueSum : Double = pixelValues.reduce(0, +) / Double(pixelValues.count)
+        let avg : UInt8 = UInt8(pixelValueSum)
+
+        let horizontalOffset = w.xPixel * 4
+        let firstByte = bytesPerRow * w.yPixel + horizontalOffset
+
+        outputBitmap[firstByte] = avg
+        outputBitmap[firstByte + 1] = avg
+        outputBitmap[firstByte + 2] = avg
+        outputBitmap[firstByte + 3] = 255
+        pixelDone?()
     }
+
+//    for i in stride(from: startXPixel, to: endXPixel, by: 1) {
+//        let horizontalOffset = i * 4
+//        for j in stride(from: startYPixel, to: endYPixel, by: 1) {
+//            var pixelValues : [Double] = []
+//            let firstByte = rowBytesToSkip * j + horizontalOffset
+//
+//            for x in stride(from: Double(i), to: Double(i+1), by: subdivision) {
+//                for y in stride(from: Double(j), to: Double(j+1), by: subdivision) {
+//
+//                    let cameraToPixelVector = pixelToWorldCoordinate(x, y) - camera
+//                    let c2punit = normalize(cameraToPixelVector)
+//                    var intersections : [Intersection] = []
+//                    traceRay(origin: camera, direction: c2punit, objects: objects, intersections: &intersections)
+//
+//                    guard !intersections.isEmpty else {
+//                        pixelValues.append(0)
+//                        continue
+//                    }
+//                    print("intersection")
+//                    var i1 = intersections[0]
+//
+//                    if i1.object.isBounding {
+//                        let boundedShapes = i1.object.getBoundedIntersectables()
+//                        var boundedShapeIntersections : [Intersection] = []
+//                        traceRay(origin: camera, direction: c2punit, objects: boundedShapes, intersections: &boundedShapeIntersections)
+//                        guard !boundedShapeIntersections.isEmpty else {
+//                            pixelValues.append(0)
+//                            continue
+//                        }
+//                        i1 = boundedShapeIntersections[0]
+//                    }
+//
+//                    let intensityMultiplier = calculateLighting(atIntersection: i1,
+//                                                                fromLights: lights,
+//                                                                worldObjects: objects)
+//
+//                    pixelValues.append(255 * intensityMultiplier)
+//                }
+//            }
+//            var pixelValueSum : Double = pixelValues.reduce(0, +)
+//
+//            pixelValueSum = pixelValueSum / Double(pixelValues.count)
+//            let avg : UInt8 = UInt8(pixelValueSum)
+//            outputBitmap[firstByte] = avg
+//            outputBitmap[firstByte + 1] = avg
+//            outputBitmap[firstByte + 2] = avg
+//            outputBitmap[firstByte + 3] = 255
+//            pixelDone?()
+//        }
+//    }
 }
 
 func getBounds(_ objects : [RayIntersectable]) -> [ BoundsDictKey : Double ] {
@@ -179,6 +207,7 @@ func raytraceWorld(camera : v3d,
     let worldBounds = getBounds(objects)
     print(worldBounds)
     print(imageCenterCoordinate)
+
     let worldHorizontalRange = 10.0
     let worldVerticalRange = 10.0
     let hpc = u * (Double(worldHorizontalRange) / 2.0)
@@ -188,19 +217,11 @@ func raytraceWorld(camera : v3d,
     let ur : v3d = imageCenterCoordinate + hpc + vpc
     let ll : v3d = imageCenterCoordinate - hpc - vpc
     let lr : v3d = imageCenterCoordinate + hpc - vpc
-    print(ul)
 
-    raytracePixels(ul: ul,
-                   ur: ur,
-                   ll: ll,
-                   lr: lr,
-                   u: u,
-                   v: v,
+    let w = WorldCoordinateSequence(ul: ul, ur: ur, ll: ll, lr: lr, u: u, v: v, startXPixel: 0, startYPixel: 0, endXPixel: imageWidth, endYPixel: imageHeight, pixelSubdivision: 1)
+
+    raytracePixels(worldCoordinates: w,
                    camera: camera,
-                   startXPixel: 0,
-                   startYPixel: 0,
-                   endXPixel: imageWidth,
-                   endYPixel: imageHeight,
                    lights: lights,
                    objects: objects,
                    outputBitmap: &outputBitmap,

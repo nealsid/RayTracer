@@ -10,8 +10,8 @@ import Cocoa
 import CoreGraphics
 import simd
 
-let imageWidth : Int = 1000
-let imageHeight : Int = 1000
+let imageWidth : Int = 100
+let imageHeight : Int = 100
 
 class ViewController: NSViewController {
     var outputBitmap : [UInt8] = ([UInt8])(repeating: 0, count: 4 * imageWidth * imageHeight)
