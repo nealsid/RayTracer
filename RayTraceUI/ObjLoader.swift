@@ -14,9 +14,9 @@ struct Vertex {
     let x, y, z : Double
 
     init (_ doubles : [Double]) {
-        x = 100 * doubles[0]
-        y = 100 * doubles[1]
-        z = 100 * doubles[2]
+        x = doubles[0]
+        y = doubles[1]
+        z = doubles[2]
     }
 }
 

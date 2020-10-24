@@ -189,10 +189,10 @@ struct Sphere : RayIntersectable {
             setOnCondition(A: &maxZ, toB: boundsDict[.MAXZ]!, ifTrue: <)
         }
 
-        let xDistance = maxX - minX
-        let yDistance = maxY - minY
-        let zDistance = maxZ - minZ
-        self.radius = [xDistance, yDistance, zDistance].max()!
+        let xDistance = abs(maxX - minX)
+        let yDistance = abs(maxY - minY)
+        let zDistance = abs(maxZ - minZ)
+        self.radius = [xDistance, yDistance, zDistance].max()! / 2
         self.center = v3d(maxX - (xDistance / 2),
                           maxY - (yDistance / 2),
                           maxZ - (zDistance / 2))
@@ -200,6 +200,7 @@ struct Sphere : RayIntersectable {
         self.radiusSquared = pow(self.radius, 2)
         self.boundedShapes = boundingObjects
         self.bounding = true
+        print(self.getBounds())
     }
 
     func intersections(origin : v3d,

@@ -66,7 +66,7 @@ struct WorldCoordinateSequence : Sequence, IteratorProtocol {
     }
 
     mutating func next() -> WorldCoordinate? {
-        if (currentXPixel == endXPixel + 1) {
+        if (currentXPixel == endXPixel) {
             return nil
         }
         var points : [v3d] = []
@@ -77,12 +77,14 @@ struct WorldCoordinateSequence : Sequence, IteratorProtocol {
             }
         }
 
+        let w = WorldCoordinate(p: points, xPixel: currentXPixel, yPixel: currentYPixel)
+
         currentYPixel += 1
 
-        if (currentYPixel > endYPixel) {
+        if (currentYPixel == endYPixel) {
             currentXPixel += 1
             currentYPixel = startYPixel
         }
-        return WorldCoordinate(p: points, xPixel: currentXPixel, yPixel: currentYPixel)
+        return w
     }
 }

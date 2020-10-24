@@ -61,7 +61,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
                     objects : [RayIntersectable],
                     outputBitmap : inout [UInt8],
                     pixelDone : (() -> Void)?) {
-    let bytesPerRow = worldCoordinates.endXPixel * 4
+    let bytesPerRow = (worldCoordinates.endXPixel - worldCoordinates.startXPixel + 1) * 4
 
     for w in worldCoordinates {
         var pixelValues : [Double] = []
@@ -77,7 +77,6 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
                 continue
             }
             
-            print("intersection")
             var i1 = intersections[0]
 
             if i1.object.isBounding {
@@ -97,12 +96,11 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
 
             pixelValues.append(255 * intensityMultiplier)
         }
-        var pixelValueSum : Double = pixelValues.reduce(0, +) / Double(pixelValues.count)
+        let pixelValueSum : Double = pixelValues.reduce(0, +) / Double(pixelValues.count)
         let avg : UInt8 = UInt8(pixelValueSum)
 
         let horizontalOffset = w.xPixel * 4
         let firstByte = bytesPerRow * w.yPixel + horizontalOffset
-
         outputBitmap[firstByte] = avg
         outputBitmap[firstByte + 1] = avg
         outputBitmap[firstByte + 2] = avg
@@ -218,7 +216,7 @@ func raytraceWorld(camera : v3d,
     let ll : v3d = imageCenterCoordinate - hpc - vpc
     let lr : v3d = imageCenterCoordinate + hpc - vpc
 
-    let w = WorldCoordinateSequence(ul: ul, ur: ur, ll: ll, lr: lr, u: u, v: v, startXPixel: 0, startYPixel: 0, endXPixel: imageWidth, endYPixel: imageHeight, pixelSubdivision: 1)
+    let w = WorldCoordinateSequence(ul: ul, ur: ur, ll: ll, lr: lr, u: u, v: v, startXPixel: 0, startYPixel: 0, endXPixel: imageWidth - 1, endYPixel: imageHeight - 1, pixelSubdivision: 1)
 
     raytracePixels(worldCoordinates: w,
                    camera: camera,

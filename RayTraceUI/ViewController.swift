@@ -10,8 +10,8 @@ import Cocoa
 import CoreGraphics
 import simd
 
-let imageWidth : Int = 100
-let imageHeight : Int = 100
+let imageWidth : Int = 1000
+let imageHeight : Int = 1000
 
 class ViewController: NSViewController {
     var outputBitmap : [UInt8] = ([UInt8])(repeating: 0, count: 4 * imageWidth * imageHeight)
@@ -98,9 +98,9 @@ class ViewController: NSViewController {
         rtStart = Date()
         initStopwatchTimer()
         DispatchQueue.global().async(group: group) { () in
-            raytraceWorld(camera: v3d(0, 50, 50),
+            raytraceWorld(camera: v3d(0, 0, 0),
                           cameraDirection: v3d(0, 0, -1),
-                          focalLength: 10,
+                          focalLength: 1.0,
                           imageWidthPixels: imageWidth - 1,
                           imageHeightPixels: imageHeight - 1,
                           lights: [PointLight(v3d(-500, -500, 25)),
