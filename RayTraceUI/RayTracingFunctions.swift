@@ -107,57 +107,6 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
         outputBitmap[firstByte + 3] = 255
         pixelDone?()
     }
-
-//    for i in stride(from: startXPixel, to: endXPixel, by: 1) {
-//        let horizontalOffset = i * 4
-//        for j in stride(from: startYPixel, to: endYPixel, by: 1) {
-//            var pixelValues : [Double] = []
-//            let firstByte = rowBytesToSkip * j + horizontalOffset
-//
-//            for x in stride(from: Double(i), to: Double(i+1), by: subdivision) {
-//                for y in stride(from: Double(j), to: Double(j+1), by: subdivision) {
-//
-//                    let cameraToPixelVector = pixelToWorldCoordinate(x, y) - camera
-//                    let c2punit = normalize(cameraToPixelVector)
-//                    var intersections : [Intersection] = []
-//                    traceRay(origin: camera, direction: c2punit, objects: objects, intersections: &intersections)
-//
-//                    guard !intersections.isEmpty else {
-//                        pixelValues.append(0)
-//                        continue
-//                    }
-//                    print("intersection")
-//                    var i1 = intersections[0]
-//
-//                    if i1.object.isBounding {
-//                        let boundedShapes = i1.object.getBoundedIntersectables()
-//                        var boundedShapeIntersections : [Intersection] = []
-//                        traceRay(origin: camera, direction: c2punit, objects: boundedShapes, intersections: &boundedShapeIntersections)
-//                        guard !boundedShapeIntersections.isEmpty else {
-//                            pixelValues.append(0)
-//                            continue
-//                        }
-//                        i1 = boundedShapeIntersections[0]
-//                    }
-//
-//                    let intensityMultiplier = calculateLighting(atIntersection: i1,
-//                                                                fromLights: lights,
-//                                                                worldObjects: objects)
-//
-//                    pixelValues.append(255 * intensityMultiplier)
-//                }
-//            }
-//            var pixelValueSum : Double = pixelValues.reduce(0, +)
-//
-//            pixelValueSum = pixelValueSum / Double(pixelValues.count)
-//            let avg : UInt8 = UInt8(pixelValueSum)
-//            outputBitmap[firstByte] = avg
-//            outputBitmap[firstByte + 1] = avg
-//            outputBitmap[firstByte + 2] = avg
-//            outputBitmap[firstByte + 3] = 255
-//            pixelDone?()
-//        }
-//    }
 }
 
 func getBounds(_ objects : [RayIntersectable]) -> [ BoundsDictKey : Double ] {
