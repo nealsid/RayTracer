@@ -13,17 +13,24 @@ import simd
 let imageWidth : Int = 1000
 let imageHeight : Int = 1000
 
-class ViewController: NSViewController {
+class ViewController : NSViewController {
     var outputBitmap : [UInt8] = ([UInt8])(repeating: 0, count: 4 * imageWidth * imageHeight)
     let group = DispatchGroup()
     var stopwatchDisplayTimer : Timer!
     let camXCoord : Float = 0
 
-    @IBOutlet weak var camZ: NSTextField!
-    @IBOutlet weak var camY: NSTextField!
+    @IBOutlet weak var cameraDirectionX: NSTextField!
+    @IBOutlet weak var cameraDirectionY: NSTextField!
+    @IBOutlet weak var cameraDirectionZ: NSTextField!
+
     @IBOutlet weak var camX: NSTextField!
+    @IBOutlet weak var camY: NSTextField!
+    @IBOutlet weak var camZ: NSTextField!
     // Subview that will contain raytrace image
     @IBOutlet weak var rtView: NSView!
+
+    @objc var focalLengthValueSlider : Double = 1.0
+    @IBOutlet weak var focalLengthNumberFormatter: NumberFormatter!
 
     @IBOutlet weak var rtRenderingTime: NSTextField!
     var rtStart : Date!
@@ -48,6 +55,10 @@ class ViewController: NSViewController {
         rayTraceImageLayer.frame = rtView.bounds
         rtView.layer!.addSublayer(rayTraceImageLayer)
         rayTraceImageLayer.opacity = 1.0
+        camX.stringValue = "0.0"
+        camY.stringValue = "0.0"
+        camZ.stringValue = "0.0"
+        focalLengthNumberFormatter.maximumFractionDigits = 2
     }
 
     @IBAction func loadObjFile(_ sender: Any) {
@@ -97,10 +108,18 @@ class ViewController: NSViewController {
         totalPixelsLabel.stringValue = String(format: "%d pixels", numberOfPixels)
         rtStart = Date()
         initStopwatchTimer()
+        let cameraLocation = v3d(Double(camX.stringValue)!,
+                                 Double(camY.stringValue)!,
+                                 Double(camZ.stringValue)!)
+
+        let cameraDirection = v3d(Double(cameraDirectionX.stringValue)!,
+                                  Double(cameraDirectionY.stringValue)!,
+                                  Double(cameraDirectionZ.stringValue)!)
+
         DispatchQueue.global().async(group: group) { () in
-            raytraceWorld(camera: v3d(0, 0, 0),
-                          cameraDirection: v3d(0, 0, -1),
-                          focalLength: 1.0,
+            raytraceWorld(camera: cameraLocation,
+                          cameraDirection: cameraDirection,
+                          focalLength: self.focalLengthValueSlider,
                           imageWidthPixels: imageWidth - 1,
                           imageHeightPixels: imageHeight - 1,
                           lights: [PointLight(v3d(-500, -500, 25)),
