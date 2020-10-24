@@ -98,7 +98,7 @@ class ViewController: NSViewController {
         rtStart = Date()
         initStopwatchTimer()
         DispatchQueue.global().async(group: group) { () in
-            raytraceWorld(camera: v3d(0, 0, 150),
+            raytraceWorld(camera: v3d(0, 50, 50),
                           cameraDirection: v3d(0, 0, -1),
                           focalLength: 10,
                           imageWidthPixels: imageWidth - 1,

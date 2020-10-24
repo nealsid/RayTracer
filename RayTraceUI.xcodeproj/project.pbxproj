@@ -15,6 +15,7 @@
 		F942E226252FA6EB006B4EFA /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = F942E225252FA6EB006B4EFA /* Utilities.swift */; };
 		F94981B225130840003CA046 /* RayTracingFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F94981B125130840003CA046 /* RayTracingFunctions.swift */; };
 		F94981B4251D6604003CA046 /* Renderables.swift in Sources */ = {isa = PBXBuildFile; fileRef = F94981B3251D6604003CA046 /* Renderables.swift */; };
+		F9B6F1482543DBBF00069BF7 /* WorldCoordinateSequence.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9B6F1472543DBBF00069BF7 /* WorldCoordinateSequence.swift */; };
 		F9B72A16250DB0F600BE4875 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F9B72A15250DB0F600BE4875 /* CoreGraphics.framework */; };
 /* End PBXBuildFile section */
 
@@ -30,6 +31,7 @@
 		F942E225252FA6EB006B4EFA /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
 		F94981B125130840003CA046 /* RayTracingFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RayTracingFunctions.swift; sourceTree = "<group>"; };
 		F94981B3251D6604003CA046 /* Renderables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Renderables.swift; sourceTree = "<group>"; };
+		F9B6F1472543DBBF00069BF7 /* WorldCoordinateSequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldCoordinateSequence.swift; sourceTree = "<group>"; };
 		F9B72A15250DB0F600BE4875 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -69,6 +71,7 @@
 				F9245DAB250C344E00C29093 /* ViewController.swift */,
 				F942E22325283B7F006B4EFA /* ObjLoader.swift */,
 				F94981B125130840003CA046 /* RayTracingFunctions.swift */,
+				F9B6F1472543DBBF00069BF7 /* WorldCoordinateSequence.swift */,
 				F94981B3251D6604003CA046 /* Renderables.swift */,
 				F942E225252FA6EB006B4EFA /* Utilities.swift */,
 				F9245DAD250C345000C29093 /* Assets.xcassets */,
@@ -157,6 +160,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F9B6F1482543DBBF00069BF7 /* WorldCoordinateSequence.swift in Sources */,
 				F942E226252FA6EB006B4EFA /* Utilities.swift in Sources */,
 				F9245DAC250C344E00C29093 /* ViewController.swift in Sources */,
 				F94981B225130840003CA046 /* RayTracingFunctions.swift in Sources */,
