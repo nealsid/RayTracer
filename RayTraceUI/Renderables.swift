@@ -19,6 +19,19 @@ enum BoundsDictKey {
 }
 
 protocol RayIntersectable {
+    var k_s : Double { // specular reflection constant
+        get
+    }
+    var k_d : Double { // diffuse reflection constant
+        get
+    }
+    var k_a : Double { // ambient reflection constant
+        get
+    }
+    var alpha : Double { // shininess constant
+        get
+    }
+
     func intersections(origin: v3d,
                        direction: v3d,
                        intersections : inout [Intersection])
@@ -28,11 +41,40 @@ protocol RayIntersectable {
     func getBounds() -> [BoundsDictKey : Double]
 }
 
+extension RayIntersectable {
+    var k_s : Double { // specular reflection constant
+        get {
+            return 0.0
+        }
+    }
+    var k_d : Double { // diffuse reflection constant
+        get {
+            return 0.0
+        }
+    }
+    var k_a : Double { // ambient reflection constant
+        get {
+            return 0.0
+        }
+    }
+    var alpha : Double { // shininess constant
+        get {
+            return 0.0
+        }
+    }
+}
+
 struct PointLight : RayIntersectable {
     let location : v3d
+    let i_s : RGBColor // specular intensity
+    let i_d : RGBColor // diffuse intensity
+    let k_a : RGBColor // contribution to ambient light
 
     init (_ location : v3d) {
         self.location = location
+        i_s = RGBColor(red: 255, green: 255, blue: 255)
+        i_d = RGBColor(red: 255, green: 255, blue: 255)
+        k_a = RGBColor(red: 20, green: 20, blue: 20)
     }
 
     func intersections(origin: v3d,

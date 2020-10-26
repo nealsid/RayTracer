@@ -854,7 +854,7 @@
                                     <binding destination="XfG-lQ-9wD" name="value" keyPath="self.focalLengthValueSlider" id="3fU-mN-Crg"/>
                                 </connections>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2s6-SJ-MGC">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="2s6-SJ-MGC">
                                 <rect key="frame" x="143" y="710" width="51" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Camera" id="a3u-Uq-euC">
                                     <font key="font" metaFont="system"/>
@@ -871,7 +871,7 @@
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             </box>
                             <box horizontalHuggingPriority="750" fixedFrame="YES" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="QXi-jW-Jhq">
-                                <rect key="frame" x="323" y="488" width="5" height="230"/>
+                                <rect key="frame" x="323" y="516" width="5" height="202"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             </box>
                             <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dou-Wi-zin">
@@ -950,11 +950,7 @@
                                 </textFieldCell>
                             </textField>
                             <box horizontalHuggingPriority="750" fixedFrame="YES" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="FTY-Qw-FMK">
-                                <rect key="frame" x="8" y="488" width="5" height="230"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            </box>
-                            <box verticalHuggingPriority="750" fixedFrame="YES" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="lcM-cK-lrx">
-                                <rect key="frame" x="11" y="486" width="315" height="5"/>
+                                <rect key="frame" x="8" y="516" width="5" height="202"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             </box>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jCt-7k-04a">
@@ -978,6 +974,10 @@
                                     <outlet property="nextKeyView" destination="8Ae-nT-gaM" id="dcI-aB-KwU"/>
                                 </connections>
                             </button>
+                            <box verticalHuggingPriority="750" fixedFrame="YES" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="lcM-cK-lrx">
+                                <rect key="frame" x="10" y="514" width="315" height="5"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                            </box>
                         </subviews>
                         <constraints>
                             <constraint firstItem="8Ae-nT-gaM" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="20" id="3MJ-YM-675"/>
@@ -997,6 +997,7 @@
                             <constraint firstItem="yYi-xQ-S1k" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="336" id="dAn-4h-Qjf"/>
                             <constraint firstItem="8Ae-nT-gaM" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="11" id="ejP-9N-FNI"/>
                             <constraint firstItem="NBq-dw-7jf" firstAttribute="top" secondItem="XI8-iu-xEE" secondAttribute="bottom" constant="-1" id="mrD-ZM-ULu"/>
+                            <constraint firstItem="2s6-SJ-MGC" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="145" id="rq0-gp-InF"/>
                             <constraint firstItem="XI8-iu-xEE" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="334" id="u1p-KU-S8l"/>
                             <constraint firstItem="yYi-xQ-S1k" firstAttribute="top" secondItem="XI8-iu-xEE" secondAttribute="bottom" constant="8" id="vgo-DU-5we"/>
                             <constraint firstAttribute="trailing" secondItem="0GL-oJ-gnT" secondAttribute="trailing" constant="444" id="yY7-Hu-6pn"/>

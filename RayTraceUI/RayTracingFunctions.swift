@@ -177,33 +177,37 @@ func raytraceWorld(camera : v3d,
 
 func calculateLighting(atIntersection isect : Intersection,
                        fromLights lights: [PointLight],
-                       worldObjects objects : [RayIntersectable]) -> Double {
+                       worldObjects objects : [RayIntersectable]) -> RGBColor {
+    var intensityMultiplier : RGBColor = RGBColor(red: 0, green: 0, blue: 0)
     guard let normal = isect.normal else {
-        return 0.0
+        return intensityMultiplier
     }
 
     let point = isect.point
-    var intensityMultiplier : Double = 0.0
     for l in lights {
-        let i1ToPl = l.location - point
-        let pl = normalize(i1ToPl)
-        let intensity = dp(pl, normal)
+        let pointToLight = l.location - point
 
-        if intensity <= 0 {
+        let pointToLightUnit = normalize(pointToLight)
+        // if the face normal points away from light, continue to next light source.
+        if dp(pointToLightUnit, normal) <= 0 {
             continue
         }
 
         // Now trace another ray to find objects in between current point and light.
         var objLightIntersections : [Intersection] = []
-        traceRay(origin: point, direction: pl, objects: objects, intersections: &objLightIntersections)
+        traceRay(origin: point, direction: pointToLightUnit, objects: objects, intersections: &objLightIntersections)
 
-        if !objLightIntersections.filter({ (i : Intersection) in
-            !i.object.isBounding
-        }).isEmpty {
+        // If the list of nonbounding shapes is non-empty, light does not reach
+        // this point from this light source, so continue to the next one.
+        // TODO seems like I'm forgetting to intersect with shapes inside the bounding shape.
+        let intersectingObjects = objLightIntersections.filter() { !$0.object.isBounding }
+        if !intersectingObjects.isEmpty {
             continue
         }
 
-        intensityMultiplier += intensity
+        //
+        intensityMultiplier += l.k_a * isect.object.k_a
+
 
         if intensityMultiplier >= 1.0 {
             intensityMultiplier = 1.0
