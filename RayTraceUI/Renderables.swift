@@ -66,15 +66,15 @@ extension RayIntersectable {
 
 struct PointLight : RayIntersectable {
     let location : v3d
-    let i_s : RGBColor // specular intensity
-    let i_d : RGBColor // diffuse intensity
-    let k_a : RGBColor // contribution to ambient light
+    let i_s : CGColor // specular intensity
+    let i_d : CGColor // diffuse intensity
+    let k_a : CGColor // contribution to ambient light
 
     init (_ location : v3d) {
         self.location = location
-        i_s = RGBColor(red: 255, green: 255, blue: 255)
-        i_d = RGBColor(red: 255, green: 255, blue: 255)
-        k_a = RGBColor(red: 20, green: 20, blue: 20)
+        i_s = CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
+        i_d = CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
+        k_a = CGColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
     }
 
     func intersections(origin: v3d,

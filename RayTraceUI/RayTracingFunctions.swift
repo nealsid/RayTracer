@@ -8,6 +8,7 @@
 
 import Foundation
 import simd
+import CoreGraphics
 
 typealias v3 = SIMD3
 typealias v3d = v3<Double>
@@ -138,6 +139,35 @@ func getBounds(_ objects : [RayIntersectable]) -> [ BoundsDictKey : Double ] {
     ]
 }
 
+extension CGColor {
+    static func *(left : CGFloat.NativeType, right : CGColor) -> CGColor {
+        let newComponents : [CGFloat] = right.components!.map() { CGFloat(left) * $0 }
+        return newComponents.withUnsafeBytes() {
+            return CGColor(colorSpace: right.colorSpace!, components: $0.baseAddress!.bindMemory(to: CGFloat.self, capacity: newComponents.count))!
+        }
+    }
+
+    static func +(left : CGFloat.NativeType, right : CGColor) -> CGColor {
+        let newComponents : [CGFloat] = right.components!.map() { CGFloat(left) + $0 }
+        return  newComponents.withUnsafeBytes() {
+            return CGColor(colorSpace: right.colorSpace!, components: $0.baseAddress!.bindMemory(to: CGFloat.self, capacity: newComponents.count))!
+        }
+    }
+
+}
+
+extension Array {
+    func countMatching(pred : ((_ el : Element) -> Bool)) -> Int {
+        var match : Int = 0
+        self.forEach() {
+            if pred($0) {
+                match += 1
+            }
+        }
+        return match
+    }
+}
+
 func raytraceWorld(camera : v3d,
                    cameraDirection : v3d,
                    focalLength : Double,
@@ -177,36 +207,36 @@ func raytraceWorld(camera : v3d,
 
 func calculateLighting(atIntersection isect : Intersection,
                        fromLights lights: [PointLight],
-                       worldObjects objects : [RayIntersectable]) -> RGBColor {
-    var intensityMultiplier : RGBColor = RGBColor(red: 0, green: 0, blue: 0)
+                       worldObjects objects : [RayIntersectable]) -> CGColor {
+    var intensityMultiplier : CGColor = CGColor(red: 0, green: 0, blue: 0, alpha: 1.0)
+    // if there's no normal, skip lighting calculations.
     guard let normal = isect.normal else {
+        // TODO make this the ambient light instead of 0
         return intensityMultiplier
     }
 
-    let point = isect.point
-    for l in lights {
-        let pointToLight = l.location - point
-
-        let pointToLightUnit = normalize(pointToLight)
+    let surfacePoint = isect.point
+    for light in lights {
+        let pointToLightUnit = normalize(light.location - surfacePoint)
         // if the face normal points away from light, continue to next light source.
-        if dp(pointToLightUnit, normal) <= 0 {
+        let normalLightVectorDp = dp(pointToLightUnit, normal)
+        if normalLightVectorDp <= 0 {
             continue
         }
 
         // Now trace another ray to find objects in between current point and light.
         var objLightIntersections : [Intersection] = []
-        traceRay(origin: point, direction: pointToLightUnit, objects: objects, intersections: &objLightIntersections)
+        traceRay(origin: surfacePoint, direction: pointToLightUnit, objects: objects, intersections: &objLightIntersections)
 
         // If the list of nonbounding shapes is non-empty, light does not reach
         // this point from this light source, so continue to the next one.
         // TODO seems like I'm forgetting to intersect with shapes inside the bounding shape.
-        let intersectingObjects = objLightIntersections.filter() { !$0.object.isBounding }
-        if !intersectingObjects.isEmpty {
+        if objLightIntersections.countMatching(pred: { !$0.object.isBounding }) > 0 {
             continue
         }
 
         //
-        intensityMultiplier += l.k_a * isect.object.k_a
+        intensityMultiplier = light.k_d * intensityMultiplier
 
 
         if intensityMultiplier >= 1.0 {
