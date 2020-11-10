@@ -58,6 +58,7 @@ func getPlaneVectors(origin : v3d,
 
 func raytracePixels(worldCoordinates : WorldCoordinateSequence,
                     camera : v3d,
+                    ambientLighting: CGColor,
                     lights : [PointLight],
                     objects : [RayIntersectable],
                     outputBitmap : inout [UInt8],
@@ -92,6 +93,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
             }
 
             let intensityMultiplier = calculateLighting(atIntersection: i1,
+                                                        ambientLight: ambientLighting,
                                                         fromLights: lights,
                                                         worldObjects: objects)
 
@@ -192,6 +194,7 @@ func raytraceWorld(camera : v3d,
                    focalLength : Double,
                    imageWidthPixels : Int,
                    imageHeightPixels : Int,
+                   ambientLight: CGColor,
                    lights : [PointLight],
                    objects : [RayIntersectable],
                    outputBitmap : inout [UInt8],
@@ -218,6 +221,7 @@ func raytraceWorld(camera : v3d,
 
     raytracePixels(worldCoordinates: w,
                    camera: camera,
+                   ambientLighting: ambientLight,
                    lights: lights,
                    objects: objects,
                    outputBitmap: &outputBitmap,
@@ -225,6 +229,7 @@ func raytraceWorld(camera : v3d,
 }
 
 func calculateLighting(atIntersection isect : Intersection,
+                       ambientLight: CGColor,
                        fromLights lights: [PointLight],
                        worldObjects objects : [RayIntersectable]) -> CGColor {
     var intensityMultiplier : CGColor = CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)

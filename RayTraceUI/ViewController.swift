@@ -23,6 +23,10 @@ class ViewController : NSViewController {
     @IBOutlet weak var cameraDirectionY: NSTextField!
     @IBOutlet weak var cameraDirectionZ: NSTextField!
 
+    @IBOutlet weak var ambientLightingR: NSTextField!
+    @IBOutlet weak var ambientLightingG: NSTextField!
+    @IBOutlet weak var ambientLightingB: NSTextField!
+
     @IBOutlet weak var camX: NSTextField!
     @IBOutlet weak var camY: NSTextField!
     @IBOutlet weak var camZ: NSTextField!
@@ -122,6 +126,7 @@ class ViewController : NSViewController {
                           focalLength: self.focalLengthValueSlider,
                           imageWidthPixels: imageWidth - 1,
                           imageHeightPixels: imageHeight - 1,
+                          ambientLight: self.ambientLighting.doubleValue,
                           lights: [PointLight(v3d(-500, -500, 25)),
                                    PointLight(v3d(500, -500, 25)),
                                    PointLight(v3d(-500, 500, 25))],
