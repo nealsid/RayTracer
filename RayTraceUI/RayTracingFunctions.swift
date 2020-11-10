@@ -65,7 +65,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
     let bytesPerRow = (worldCoordinates.endXPixel - worldCoordinates.startXPixel + 1) * 4
 
     for w in worldCoordinates {
-        var pixelValues : [Double] = []
+        var pixelValues : [CGColor] = []
 
         for focalPlanePoint in w.p {
             let c2punit = normalize(focalPlanePoint - camera)
@@ -74,7 +74,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
             traceRay(origin: camera, direction: c2punit, objects: objects, intersections: &intersections)
 
             guard !intersections.isEmpty else {
-                pixelValues.append(0)
+                pixelValues.append(CGColor.zero())
                 continue
             }
             
@@ -85,7 +85,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
                 var boundedShapeIntersections : [Intersection] = []
                 traceRay(origin: camera, direction: c2punit, objects: boundedShapes, intersections: &boundedShapeIntersections)
                 guard !boundedShapeIntersections.isEmpty else {
-                    pixelValues.append(0)
+                    pixelValues.append(CGColor.zero())
                     continue
                 }
                 i1 = boundedShapeIntersections[0]
@@ -97,15 +97,20 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
 
             pixelValues.append(255 * intensityMultiplier)
         }
-        let pixelValueSum : Double = pixelValues.reduce(0, +) / Double(pixelValues.count)
-        let avg : UInt8 = UInt8(pixelValueSum)
+
+//        let pixelValueSum : Double = pixelValues.reduce(0, +) / Double(pixelValues.count)
+        let pixelValueSum : CGColor = pixelValues.reduce(CGColor(red: 0, green: 0, blue: 0, alpha: 1.0), +)
 
         let horizontalOffset = w.xPixel * 4
         let firstByte = bytesPerRow * w.yPixel + horizontalOffset
-        outputBitmap[firstByte] = avg
-        outputBitmap[firstByte + 1] = avg
-        outputBitmap[firstByte + 2] = avg
-        outputBitmap[firstByte + 3] = 255
+        outputBitmap[firstByte] = UInt8(pixelValueSum.components![0] * 255)
+        outputBitmap[firstByte + 1] = UInt8(pixelValueSum.components![1] * 255)
+        outputBitmap[firstByte + 2] = UInt8(pixelValueSum.components![2] * 255)
+        outputBitmap[firstByte + 3] = UInt8(pixelValueSum.components![3] * 255)
+        print("""
+            \(w.xPixel)/\(w.yPixel): r: \(outputBitmap[firstByte]), b: \(outputBitmap[firstByte + 1]), \
+                g: \(outputBitmap[firstByte + 2]), a: \(outputBitmap[firstByte + 3])
+            """)
         pixelDone?()
     }
 }
@@ -140,20 +145,34 @@ func getBounds(_ objects : [RayIntersectable]) -> [ BoundsDictKey : Double ] {
 }
 
 extension CGColor {
-    static func *(left : CGFloat.NativeType, right : CGColor) -> CGColor {
-        let newComponents : [CGFloat] = right.components!.map() { CGFloat(left) * $0 }
+
+    func mapComponents(_ a : CGFloat.NativeType, op: ((_ a : CGFloat.NativeType, _ b : CGFloat.NativeType) -> CGFloat.NativeType)) -> CGColor {
+        let newComponents : [CGFloat] = self.components!.map() { CGFloat(op(a, CGFloat.NativeType($0))) }
         return newComponents.withUnsafeBytes() {
-            return CGColor(colorSpace: right.colorSpace!, components: $0.baseAddress!.bindMemory(to: CGFloat.self, capacity: newComponents.count))!
+            CGColor(colorSpace: self.colorSpace!, components: $0.baseAddress!.bindMemory(to: CGFloat.self, capacity: newComponents.count))!
         }
+    }
+
+    static func *(left : CGFloat.NativeType, right : CGColor) -> CGColor {
+        return right.mapComponents(left, op: *)
     }
 
     static func +(left : CGFloat.NativeType, right : CGColor) -> CGColor {
-        let newComponents : [CGFloat] = right.components!.map() { CGFloat(left) + $0 }
-        return  newComponents.withUnsafeBytes() {
-            return CGColor(colorSpace: right.colorSpace!, components: $0.baseAddress!.bindMemory(to: CGFloat.self, capacity: newComponents.count))!
-        }
+        return right.mapComponents(left, op: +)
     }
 
+    static func +(left: CGColor, right: CGColor) -> CGColor {
+        return zip(left.components!, right.components!).map(+).withUnsafeBytes {
+            CGColor(colorSpace: left.colorSpace!, components: $0.baseAddress!.bindMemory(to: CGFloat.self, capacity: left.components!.count))!
+        }
+    }
+    static func /(left : CGColor, right : CGFloat.NativeType) -> CGColor {
+        return left.mapComponents(right, op: /)
+    }
+
+    static func zero() -> CGColor {
+        return CGColor(red: 0, green: 0, blue: 0, alpha: 1.0)
+    }
 }
 
 extension Array {
@@ -208,7 +227,7 @@ func raytraceWorld(camera : v3d,
 func calculateLighting(atIntersection isect : Intersection,
                        fromLights lights: [PointLight],
                        worldObjects objects : [RayIntersectable]) -> CGColor {
-    var intensityMultiplier : CGColor = CGColor(red: 0, green: 0, blue: 0, alpha: 1.0)
+    var intensityMultiplier : CGColor = CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
     // if there's no normal, skip lighting calculations.
     guard let normal = isect.normal else {
         // TODO make this the ambient light instead of 0
@@ -236,13 +255,8 @@ func calculateLighting(atIntersection isect : Intersection,
         }
 
         //
-        intensityMultiplier = light.k_d * intensityMultiplier
+        intensityMultiplier = intensityMultiplier + (light.k_d * intensityMultiplier)
 
-
-        if intensityMultiplier >= 1.0 {
-            intensityMultiplier = 1.0
-            break
-        }
     }
     return intensityMultiplier
 }
