@@ -149,7 +149,7 @@ func getBounds(_ objects : [RayIntersectable]) -> [ BoundsDictKey : Double ] {
 extension CGColor {
 
     func mapComponents(_ a : CGFloat.NativeType, op: ((_ a : CGFloat.NativeType, _ b : CGFloat.NativeType) -> CGFloat.NativeType)) -> CGColor {
-        let newComponents : [CGFloat] = self.components!.map() { CGFloat(op(a, CGFloat.NativeType($0))) }
+        let newComponents : [CGFloat] = self.components!.map() { CGFloat(op(CGFloat.NativeType($0), a)) }
         return newComponents.withUnsafeBytes() {
             CGColor(colorSpace: self.colorSpace!, components: $0.baseAddress!.bindMemory(to: CGFloat.self, capacity: newComponents.count))!
         }
