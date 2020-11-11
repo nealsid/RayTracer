@@ -97,21 +97,21 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
                                                         fromLights: lights,
                                                         worldObjects: objects)
 
-            pixelValues.append(255 * intensityMultiplier)
+            pixelValues.append(intensityMultiplier)
         }
 
 //        let pixelValueSum : Double = pixelValues.reduce(0, +) / Double(pixelValues.count)
-        let pixelValueSum : CGColor = pixelValues.reduce(CGColor(red: 0, green: 0, blue: 0, alpha: 1.0), +)
-
+        var pixelValueSum : CGColor = pixelValues.reduce(CGColor(red: 0, green: 0, blue: 0, alpha: 1.0), +)
+        pixelValueSum = pixelValueSum / CGFloat.NativeType(pixelValues.count)
         let horizontalOffset = w.xPixel * 4
         let firstByte = bytesPerRow * w.yPixel + horizontalOffset
-        outputBitmap[firstByte] = UInt8(pixelValueSum.components![0] * 255)
-        outputBitmap[firstByte + 1] = UInt8(pixelValueSum.components![1] * 255)
-        outputBitmap[firstByte + 2] = UInt8(pixelValueSum.components![2] * 255)
-        outputBitmap[firstByte + 3] = UInt8(pixelValueSum.components![3] * 255)
+        outputBitmap[firstByte] = UInt8(255 * pixelValueSum.components![0])
+        outputBitmap[firstByte + 1] = UInt8(255 * pixelValueSum.components![1])
+        outputBitmap[firstByte + 2] = UInt8(255 * pixelValueSum.components![2])
+        outputBitmap[firstByte + 3] = UInt8(255 * pixelValueSum.components![3])
         print("""
             \(w.xPixel)/\(w.yPixel): r: \(outputBitmap[firstByte]), b: \(outputBitmap[firstByte + 1]), \
-                g: \(outputBitmap[firstByte + 2]), a: \(outputBitmap[firstByte + 3])
+            g: \(outputBitmap[firstByte + 2]), a: \(outputBitmap[firstByte + 3])
             """)
         pixelDone?()
     }
@@ -229,10 +229,10 @@ func raytraceWorld(camera : v3d,
 }
 
 func calculateLighting(atIntersection isect : Intersection,
-                       ambientLight: CGColor,
+                       ambientLight : CGColor,
                        fromLights lights: [PointLight],
                        worldObjects objects : [RayIntersectable]) -> CGColor {
-    var intensityMultiplier : CGColor = CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
+    var intensityMultiplier : CGColor = ambientLight
     // if there's no normal, skip lighting calculations.
     guard let normal = isect.normal else {
         // TODO make this the ambient light instead of 0
