@@ -259,8 +259,7 @@ func calculateLighting(atIntersection isect : Intersection,
             continue
         }
 
-        //
-        intensityMultiplier = intensityMultiplier + (light.k_d * intensityMultiplier)
+        intensityMultiplier = (normalLightVectorDp * light.k_d) + intensityMultiplier
 
     }
     return intensityMultiplier

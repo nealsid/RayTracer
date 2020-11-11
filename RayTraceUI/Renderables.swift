@@ -49,7 +49,7 @@ extension RayIntersectable {
     }
     var k_d : Double { // diffuse reflection constant
         get {
-            return 0.0
+            return 1.0
         }
     }
     var k_a : Double { // ambient reflection constant
