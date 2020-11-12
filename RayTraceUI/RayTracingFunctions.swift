@@ -47,7 +47,7 @@ func getPlaneVectors(origin : v3d,
                      direction : v3d,
                      focalLength : Double) -> (v3d, v3d) {
     let planeNormal = normalize(-direction)
-    let up = v3d(0, 1, 0)
+    let up = normalize(v3d(0, 1, -1))
 
     // calculate horizontal & vertical focal plane vectors
     let u = normalize(cross(up, planeNormal))
@@ -100,7 +100,6 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
             pixelValues.append(intensityMultiplier)
         }
 
-//        let pixelValueSum : Double = pixelValues.reduce(0, +) / Double(pixelValues.count)
         var pixelValueSum : CGColor = pixelValues.reduce(CGColor.rgb([0, 0, 0, 1.0]), +)
         pixelValueSum = pixelValueSum / CGFloat.NativeType(pixelValues.count)
         let horizontalOffset = w.xPixel * 4
@@ -108,11 +107,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
         outputBitmap[firstByte] = UInt8(255 * pixelValueSum.components![0])
         outputBitmap[firstByte + 1] = UInt8(255 * pixelValueSum.components![1])
         outputBitmap[firstByte + 2] = UInt8(255 * pixelValueSum.components![2])
-        outputBitmap[firstByte + 3] = UInt8(255 * pixelValueSum.components![3])
-        print("""
-            \(w.xPixel)/\(w.yPixel): r: \(outputBitmap[firstByte]), b: \(outputBitmap[firstByte + 1]), \
-            g: \(outputBitmap[firstByte + 2]), a: \(outputBitmap[firstByte + 3])
-            """)
+        outputBitmap[firstByte + 3] = UInt8(255 * (pixelValueSum.components?[3] ?? 1.0))
         pixelDone?()
     }
 }
@@ -146,51 +141,6 @@ func getBounds(_ objects : [RayIntersectable]) -> [ BoundsDictKey : Double ] {
     ]
 }
 
-extension CGColor {
-    static func rgb(_ components : [CGFloat.NativeType]) -> CGColor {
-        return CGColor(red: CGFloat(components[0]), green: CGFloat(components[1]), blue: CGFloat(components[2]), alpha: CGFloat(components[4]))
-    }
-    func mapComponents(_ a : CGFloat.NativeType, op: ((_ a : CGFloat.NativeType, _ b : CGFloat.NativeType) -> CGFloat.NativeType)) -> CGColor {
-        let newComponents : [CGFloat] = self.components!.map() { CGFloat(op(CGFloat.NativeType($0), a)) }
-        return newComponents.withUnsafeBytes() {
-            CGColor(colorSpace: self.colorSpace!, components: $0.baseAddress!.bindMemory(to: CGFloat.self, capacity: newComponents.count))!
-        }
-    }
-
-    static func *(left : CGFloat.NativeType, right : CGColor) -> CGColor {
-        return right.mapComponents(left, op: *)
-    }
-
-    static func +(left : CGFloat.NativeType, right : CGColor) -> CGColor {
-        return right.mapComponents(left, op: +)
-    }
-
-    static func +(left: CGColor, right: CGColor) -> CGColor {
-        return zip(left.components!, right.components!).map(+).withUnsafeBytes {
-            CGColor(colorSpace: left.colorSpace!, components: $0.baseAddress!.bindMemory(to: CGFloat.self, capacity: left.components!.count))!
-        }
-    }
-    static func /(left : CGColor, right : CGFloat.NativeType) -> CGColor {
-        return left.mapComponents(right, op: /)
-    }
-
-    static func zero() -> CGColor {
-        return CGColor.rgb([0, 0, 0, 1.0])
-    }
-}
-
-extension Array {
-    func countMatching(pred : ((_ el : Element) -> Bool)) -> Int {
-        var match : Int = 0
-        self.forEach() {
-            if pred($0) {
-                match += 1
-            }
-        }
-        return match
-    }
-}
-
 func raytraceWorld(camera : v3d,
                    cameraDirection : v3d,
                    focalLength : Double,
@@ -205,10 +155,6 @@ func raytraceWorld(camera : v3d,
     let (u, v) : (v3d, v3d) = getPlaneVectors(origin: camera,
                                               direction: cameraDirection,
                                               focalLength: focalLength)
-    let worldBounds = getBounds(objects)
-    print(worldBounds)
-    print(imageCenterCoordinate)
-
     let worldHorizontalRange = 10.0
     let worldVerticalRange = 10.0
     let hpc = u * (Double(worldHorizontalRange) / 2.0)
