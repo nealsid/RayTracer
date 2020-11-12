@@ -75,7 +75,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
             traceRay(origin: camera, direction: c2punit, objects: objects, intersections: &intersections)
 
             guard !intersections.isEmpty else {
-                pixelValues.append(CGColor.zero())
+                pixelValues.append(CGColor.black)
                 continue
             }
             
@@ -101,7 +101,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
         }
 
 //        let pixelValueSum : Double = pixelValues.reduce(0, +) / Double(pixelValues.count)
-        var pixelValueSum : CGColor = pixelValues.reduce(CGColor(red: 0, green: 0, blue: 0, alpha: 1.0), +)
+        var pixelValueSum : CGColor = pixelValues.reduce(CGColor.rgb([0, 0, 0, 1.0]), +)
         pixelValueSum = pixelValueSum / CGFloat.NativeType(pixelValues.count)
         let horizontalOffset = w.xPixel * 4
         let firstByte = bytesPerRow * w.yPixel + horizontalOffset
@@ -147,7 +147,9 @@ func getBounds(_ objects : [RayIntersectable]) -> [ BoundsDictKey : Double ] {
 }
 
 extension CGColor {
-
+    static func rgb(_ components : [CGFloat.NativeType]) -> CGColor {
+        return CGColor(red: CGFloat(components[0]), green: CGFloat(components[1]), blue: CGFloat(components[2]), alpha: CGFloat(components[4]))
+    }
     func mapComponents(_ a : CGFloat.NativeType, op: ((_ a : CGFloat.NativeType, _ b : CGFloat.NativeType) -> CGFloat.NativeType)) -> CGColor {
         let newComponents : [CGFloat] = self.components!.map() { CGFloat(op(CGFloat.NativeType($0), a)) }
         return newComponents.withUnsafeBytes() {
@@ -173,7 +175,7 @@ extension CGColor {
     }
 
     static func zero() -> CGColor {
-        return CGColor(red: 0, green: 0, blue: 0, alpha: 1.0)
+        return CGColor.rgb([0, 0, 0, 1.0])
     }
 }
 
