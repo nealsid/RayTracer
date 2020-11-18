@@ -67,12 +67,22 @@ class ViewController : NSViewController {
 
     @IBAction func loadObjFile(_ sender: Any) {
         let openPanel = NSOpenPanel();
-        openPanel.allowsMultipleSelection = false;
+        openPanel.allowsMultipleSelection = true;
         openPanel.canChooseDirectories = false;
         openPanel.canCreateDirectories = false;
         openPanel.canChooseFiles = true;
         openPanel.runModal();
-        let objFile = readObjFile(String(openPanel.url!.path))
+        var objFile : ObjFile!
+        var materialDict : [String : Material]
+        for chosenUrl in openPanel.urls {
+            let path = String(chosenUrl.path)
+            if path.hasSuffix("obj") {
+                objFile = readObjFile(String(path))
+            }
+            if path.hasSuffix("mtl") {
+                materialDict = readMtlFile(path)
+            }
+        }
         let triangles = createTriangleList(objFile)
         t = [Sphere(boundingObjects: triangles)]
 
