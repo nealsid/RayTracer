@@ -45,35 +45,85 @@ extension Array {
     }
 }
 
-extension CGColor {
-    static func rgb(_ components : [CGFloat.NativeType]) -> CGColor {
-        return CGColor(red: CGFloat(components[0]), green: CGFloat(components[1]), blue: CGFloat(components[2]), alpha: CGFloat(components[3]))
-    }
-    func mapComponents(_ a : CGFloat.NativeType, op: ((_ a : CGFloat.NativeType, _ b : CGFloat.NativeType) -> CGFloat.NativeType)) -> CGColor {
-        let newComponents : [CGFloat] = self.components!.map() { CGFloat(op(CGFloat.NativeType($0), a)) }
-        return newComponents.withUnsafeBytes() {
-            CGColor(colorSpace: self.colorSpace!, components: $0.baseAddress!.bindMemory(to: CGFloat.self, capacity: newComponents.count))!
+extension Array where Element == RGBA {
+    func average() -> Element {
+        var cumulative : RGBA = RGBA(0, 0, 0, 0)
+        for rgba in self {
+            cumulative = cumulative + rgba
         }
+
+        let doubleCount = Double(self.count)
+        return RGBA(cumulative.red / doubleCount,
+                    cumulative.green / doubleCount,
+                    cumulative.blue / doubleCount,
+                    cumulative.alpha / doubleCount)
+    }
+}
+
+struct RGBA {
+    var red : Double
+    var green : Double
+    var blue : Double
+    var alpha : Double
+
+    init(_ r : Double, _ g : Double, _ b : Double, _ a : Double) {
+        self.red = r
+        self.green = g
+        self.blue = b
+        self.alpha = a
+        assertComponentsBetweenZeroAndOne()
     }
 
-    static func *(left : CGFloat.NativeType, right : CGColor) -> CGColor {
-        return right.mapComponents(left, op: *)
+
+    init(_ r : Double, _ g : Double, _ b : Double) {
+        self.init(r, g, b, 1.0)
     }
 
-    static func +(left : CGFloat.NativeType, right : CGColor) -> CGColor {
-        return right.mapComponents(left, op: +)
+    static func zero() -> RGBA {
+        return RGBA(0, 0, 0, 0)
     }
 
-    static func +(left: CGColor, right: CGColor) -> CGColor {
-        return zip(left.components!, right.components!).map(+).withUnsafeBytes {
-            CGColor(colorSpace: left.colorSpace!, components: $0.baseAddress!.bindMemory(to: CGFloat.self, capacity: left.components!.count))!
-        }
-    }
-    static func /(left : CGColor, right : CGFloat.NativeType) -> CGColor {
-        return left.mapComponents(right, op: /)
+    static func *(left : RGBA, right : RGBA) -> RGBA {
+        return RGBA(left.red * right.red,
+                    left.green * right.green,
+                    left.blue * right.blue,
+                    left.alpha * right.alpha)
     }
 
-    static func zero() -> CGColor {
-        return CGColor.rgb([0, 0, 0, 1.0])
+    static func *(left : Double, right : RGBA) -> RGBA {
+        return RGBA(right.red * left,
+                    right.green * left,
+                    right.blue * left,
+                    right.alpha)
     }
+
+    static func *(left : RGBA, right : Double) -> RGBA {
+        return right * left
+    }
+
+    static func +(left : Double, right : RGBA) -> RGBA {
+        return RGBA(right.red + left,
+                    right.green + left,
+                    right.blue + left,
+                    right.alpha)
+    }
+
+    static func +(left : RGBA, right : Double) -> RGBA {
+        return right + left
+    }
+
+    static func +(left : RGBA, right : RGBA) -> RGBA {
+        return RGBA(left.red + right.red,
+                    left.green + right.green,
+                    left.blue + right.blue,
+                    left.alpha + right.alpha)
+    }
+
+    func assertComponentsBetweenZeroAndOne() {
+        assert(self.red >= 0 && self.red <= 1.0)
+        assert(self.green >= 0 && self.green <= 1.0)
+        assert(self.blue >= 0 && self.blue <= 1.0)
+        assert(self.alpha >= 0 && self.alpha <= 1.0)
+    }
+    static var black : RGBA = RGBA(0, 0, 0, 1.0)
 }

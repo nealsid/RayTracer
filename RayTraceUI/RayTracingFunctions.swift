@@ -58,7 +58,7 @@ func getPlaneVectors(origin : v3d,
 
 func raytracePixels(worldCoordinates : WorldCoordinateSequence,
                     camera : v3d,
-                    ambientLighting: CGColor,
+                    ambientLighting: RGBA,
                     lights : [PointLight],
                     objects : [RayIntersectable],
                     materialDictionary : [String : Material],
@@ -67,7 +67,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
     let bytesPerRow = (worldCoordinates.endXPixel - worldCoordinates.startXPixel + 1) * 4
 
     for w in worldCoordinates {
-        var pixelValues : [CGColor] = []
+        var pixelValues : [RGBA] = []
 
         for focalPlanePoint in w.p {
             let c2punit = normalize(focalPlanePoint - camera)
@@ -76,7 +76,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
             traceRay(origin: camera, direction: c2punit, objects: objects, intersections: &intersections)
 
             guard !intersections.isEmpty else {
-                pixelValues.append(CGColor.black)
+                pixelValues.append(RGBA.black)
                 continue
             }
             
@@ -87,7 +87,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
                 var boundedShapeIntersections : [Intersection] = []
                 traceRay(origin: camera, direction: c2punit, objects: boundedShapes, intersections: &boundedShapeIntersections)
                 guard !boundedShapeIntersections.isEmpty else {
-                    pixelValues.append(CGColor.zero())
+                    pixelValues.append(RGBA.black)
                     continue
                 }
                 i1 = boundedShapeIntersections[0]
@@ -102,14 +102,13 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
             pixelValues.append(intensityMultiplier)
         }
 
-        var pixelValueSum : CGColor = pixelValues.reduce(CGColor.rgb([0, 0, 0, 1.0]), +)
-        pixelValueSum = pixelValueSum / CGFloat.NativeType(pixelValues.count)
+        let pixelValueAverage : RGBA = pixelValues.average()
         let horizontalOffset = w.xPixel * 4
         let firstByte = bytesPerRow * w.yPixel + horizontalOffset
-        outputBitmap[firstByte] = UInt8(255 * pixelValueSum.components![0])
-        outputBitmap[firstByte + 1] = UInt8(255 * pixelValueSum.components![1])
-        outputBitmap[firstByte + 2] = UInt8(255 * pixelValueSum.components![2])
-        outputBitmap[firstByte + 3] = UInt8(255 * (pixelValueSum.components?[3] ?? 1.0))
+        outputBitmap[firstByte] = UInt8(255 * pixelValueAverage.red)
+        outputBitmap[firstByte + 1] = UInt8(255 * pixelValueAverage.green)
+        outputBitmap[firstByte + 2] = UInt8(255 * pixelValueAverage.blue)
+        outputBitmap[firstByte + 3] = UInt8(255 * pixelValueAverage.alpha)
         pixelDone?()
     }
 }
@@ -148,7 +147,7 @@ func raytraceWorld(camera : v3d,
                    focalLength : Double,
                    imageWidthPixels : Int,
                    imageHeightPixels : Int,
-                   ambientLight: CGColor,
+                   ambientLight: RGBA,
                    lights : [PointLight],
                    objects : [RayIntersectable],
                    materialDictionary : [String : Material],
@@ -181,20 +180,17 @@ func raytraceWorld(camera : v3d,
 }
 
 func calculateLighting(atIntersection isect : Intersection,
-                       ambientLight : CGColor,
+                       ambientLight : RGBA,
                        fromLights lights: [PointLight],
                        worldObjects objects : [RayIntersectable],
-                       materialDictionary : [String : Material]) -> CGColor {
+                       materialDictionary : [String : Material]) -> RGBA {
 
     let surfacePoint = isect.point
     let m = materialDictionary[isect.object.materialName]!
 
-    var intensityMultiplier : CGColor = CGColor(red: (ambientLight.components?[0])! * CGFloat(m.ka.x),
-                                                green: (ambientLight.components?[1])! * CGFloat(m.ka.y),
-                                                blue: (ambientLight.components?[2])! * CGFloat(m.ka.z),
-                                                alpha: ambientLight.alpha)
-    // if there's no normal, skip lighting calculations.
+    var intensityMultiplier : RGBA = ambientLight * m.ka
 
+    // if there's no normal, skip non-ambient lighting calculations.
     guard let normal = isect.normal else {
         // TODO make this the ambient light instead of 0
         return intensityMultiplier
@@ -218,7 +214,7 @@ func calculateLighting(atIntersection isect : Intersection,
         if objLightIntersections.countMatching(pred: { !$0.object.isBounding }) > 0 {
             continue
         }
-        intensityMultiplier = (normalLightVectorDp * light.k_a) + intensityMultiplier
+        intensityMultiplier = (normalLightVectorDp * light.k_d) + intensityMultiplier
 
     }
     return intensityMultiplier
