@@ -37,11 +37,16 @@ struct VertexNormal {
     }
 }
 
+struct Face {
+    var vertexIndices : (Int, Int, Int)!
+    var materialName : String = ""
+}
+
 struct ObjFile {
     var vertices : [Vertex] = []
     var vertexTextures : [VertexTexture] = []
     var vertexNormals : [VertexNormal] = []
-    var faces : [(Int, Int, Int)] = []
+    var faces : [Face] = []
 }
 
 struct Material {
@@ -59,7 +64,7 @@ func parseNumbers<T> (_ line : String.SubSequence) -> [T] where T : LosslessStri
 
 extension Substring {
     // A replacement for String.trimmingCharacters that returns a Substring instead of a String to avoid making a copy.
-    func trimToSubstring(in inp : CharacterSet) -> Substring {
+    func trimToSubstring(in toTrim : CharacterSet) -> Substring {
         if (self.startIndex == self.endIndex) {
             return self
         }
@@ -68,31 +73,22 @@ extension Substring {
         // Make endIndex inclusive of last element.
         var endIndex = self.index(self.endIndex, offsetBy: -1)
 
-        // if we're passed a 1 element string that does not contain a character to be trimmed, we'll end up testing it twice. alternative is to handle it as a special case.
+        // if we're passed a 1 element string that does not contain a character to be trimmed, we'll end up testing it twice
+        // alternative is to handle it as a special case.
 
-        while startIndex <= endIndex && inp.contains(self[startIndex].unicodeScalars.first!) {
+        while startIndex <= endIndex && toTrim.contains(self[startIndex].unicodeScalars.first!) {
             startIndex = self.index(startIndex, offsetBy: 1)
         }
 
-        while endIndex > startIndex && inp.contains(self[endIndex].unicodeScalars.first!) {
+        while endIndex > startIndex && toTrim.contains(self[endIndex].unicodeScalars.first!) {
             endIndex = self.index(endIndex, offsetBy: -1)
         }
 
         if startIndex > endIndex { // all characters in the string were trimmed characters
             return ""
         }
+
         return self[startIndex...endIndex]
-    }
-}
-
-func fileLineGroupIterator(_ inputFile : String, cb : ([Substring])) {
-    let objFileData = try! String(contentsOfFile: inputFile)
-    let lines = objFileData.split(separator: "\n")
-
-    for x in lines {
-        if x.range(of: "^newmtl", options: .regularExpression) != nil {
-
-        }
     }
 }
 
@@ -155,9 +151,15 @@ func readObjFile(_ objFile : String) -> ObjFile {
     let lines = objFileData.split(separator: "\n")
 
     var o = ObjFile()
+    var materialName : Substring = ""
 
     for x in lines {
         if x.starts(with: "#") {
+            continue
+        }
+
+        if x.starts(with: "usemtl ") {
+            materialName = x.split(separator: " ").last!
             continue
         }
 
@@ -178,7 +180,8 @@ func readObjFile(_ objFile : String) -> ObjFile {
 
         if (x.starts(with: "f ")) {
             let vertexIndices : [Int] = parseNumbers(x)
-            o.faces.append((vertexIndices[0], vertexIndices[1], vertexIndices[2]))
+            o.faces.append(Face(vertexIndices: (vertexIndices[0], vertexIndices[1], vertexIndices[2]),
+                                materialName: String(materialName)))
             continue
         }
     }

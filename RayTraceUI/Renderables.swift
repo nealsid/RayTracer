@@ -32,6 +32,10 @@ protocol RayIntersectable {
         get
     }
 
+    var materialName : String {
+        get
+    }
+
     func intersections(origin: v3d,
                        direction: v3d,
                        intersections : inout [Intersection])
@@ -60,6 +64,12 @@ extension RayIntersectable {
     var alpha : Double { // shininess constant
         get {
             return 0.0
+        }
+    }
+
+    var materialName : String {
+        get {
+            return ""
         }
     }
 }
@@ -118,9 +128,11 @@ struct PointLight : RayIntersectable {
 
 struct Triangle : RayIntersectable {
     let vertices : [v3d]
+    let materialName : String
 
-    init(_ points : [v3d]) {
+    init(_ points : [v3d], materialName : String) {
         self.vertices = points
+        self.materialName = materialName
         assert(points.count == 3)
     }
 
@@ -128,7 +140,7 @@ struct Triangle : RayIntersectable {
         return false
         }
     }
-
+    
     func getBoundedIntersectables() -> [RayIntersectable] {
         return []
     }

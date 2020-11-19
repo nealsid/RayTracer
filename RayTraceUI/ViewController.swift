@@ -52,6 +52,8 @@ class ViewController : NSViewController {
     var rayTraceCGImage : CGImage!
     let viewUpdateTimer = DispatchSource.makeTimerSource()
 
+    var materialDict : [String : Material]!
+
     override func viewDidLoad() {
         super.viewDidLoad()
         rtView.layer!.borderWidth = 1
@@ -73,7 +75,6 @@ class ViewController : NSViewController {
         openPanel.canChooseFiles = true;
         openPanel.runModal();
         var objFile : ObjFile!
-        var materialDict : [String : Material]
         for chosenUrl in openPanel.urls {
             let path = String(chosenUrl.path)
             if path.hasSuffix("obj") {
@@ -91,12 +92,13 @@ class ViewController : NSViewController {
     func createTriangleList(_ o : ObjFile) -> [Triangle] {
         var t : [Triangle] = []
         for f in o.faces {
-            let face1Vertex = f.0 - 1
-            let face2Vertex = f.1 - 1
-            let face3Vertex = f.2 - 1
+            let face1Vertex = f.vertexIndices.0 - 1
+            let face2Vertex = f.vertexIndices.1 - 1
+            let face3Vertex = f.vertexIndices.2 - 1
             t.append(Triangle([v3d(o.vertices[face1Vertex].x, o.vertices[face1Vertex].y, o.vertices[face1Vertex].z),
                               v3d(o.vertices[face2Vertex].x, o.vertices[face2Vertex].y, o.vertices[face2Vertex].z),
-                              v3d(o.vertices[face3Vertex].x, o.vertices[face3Vertex].y, o.vertices[face3Vertex].z)]))
+                              v3d(o.vertices[face3Vertex].x, o.vertices[face3Vertex].y, o.vertices[face3Vertex].z)],
+                              materialName: f.materialName))
 
         }
         return t
@@ -151,6 +153,7 @@ class ViewController : NSViewController {
                 Triangle([v3d(-500, 0, -500), v3d(500, -250, 0), v3d(500, 0, -500)]),
                 Triangle([v3d(-500, -500, 0), v3d(500, -500, 0), v3d(-500, -250, 0)]),
                 Triangle([v3d(-500, -250, 0), v3d(500, -500, 0), v3d(500, -250, 0)])],*/
+                          materialDictionary: self.materialDict,
                           outputBitmap: &self.outputBitmap,
                           pixelDone: {
                             self.pixelCounter += 1
