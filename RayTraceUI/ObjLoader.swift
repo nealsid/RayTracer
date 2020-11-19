@@ -57,6 +57,45 @@ func parseNumbers<T> (_ line : String.SubSequence) -> [T] where T : LosslessStri
     return line.split(separator: " ").dropFirst().map() { (T(String($0))!) }
 }
 
+extension Substring {
+    // A replacement for String.trimmingCharacters that returns a Substring instead of a String to avoid making a copy.
+    func trimToSubstring(in inp : CharacterSet) -> Substring {
+        if (self.startIndex == self.endIndex) {
+            return self
+        }
+
+        var startIndex = self.startIndex
+        // Make endIndex inclusive of last element.
+        var endIndex = self.index(self.endIndex, offsetBy: -1)
+
+        // if we're passed a 1 element string that does not contain a character to be trimmed, we'll end up testing it twice. alternative is to handle it as a special case.
+
+        while startIndex <= endIndex && inp.contains(self[startIndex].unicodeScalars.first!) {
+            startIndex = self.index(startIndex, offsetBy: 1)
+        }
+
+        while endIndex > startIndex && inp.contains(self[endIndex].unicodeScalars.first!) {
+            endIndex = self.index(endIndex, offsetBy: -1)
+        }
+
+        if startIndex > endIndex { // all characters in the string were trimmed characters
+            return ""
+        }
+        return self[startIndex...endIndex]
+    }
+}
+
+func fileLineGroupIterator(_ inputFile : String, cb : ([Substring])) {
+    let objFileData = try! String(contentsOfFile: inputFile)
+    let lines = objFileData.split(separator: "\n")
+
+    for x in lines {
+        if x.range(of: "^newmtl", options: .regularExpression) != nil {
+
+        }
+    }
+}
+
 func readMtlFile(_ mtlFile : String) -> [String : Material] {
     var ret : [String : Material] = [:]
     let objFileData = try! String(contentsOfFile: mtlFile)
@@ -64,7 +103,7 @@ func readMtlFile(_ mtlFile : String) -> [String : Material] {
 
     for var i in 0..<lines.count {
 
-        let x = lines[i].trimmingCharacters(in: .whitespacesAndNewlines)
+        let x = lines[i].trimToSubstring(in: .whitespacesAndNewlines)
         if x.starts(with: "#") || x.isEmpty {
             continue
         }
@@ -99,19 +138,13 @@ func readMtlFile(_ mtlFile : String) -> [String : Material] {
                     continue
                 }
 
-                if mtlLine.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    ret[materialName] = m
-                    i = j
-                    break
-                }
-
-                if mtlLine.starts(with: "newmtl") {
-                    ret[materialName] = m
+                if mtlLine.trimToSubstring(in: .whitespacesAndNewlines).isEmpty ||
+                    mtlLine.starts(with: "newmtl") {
                     i = j
                     break
                 }
             }
-
+            ret[materialName] = m
         }
     }
     return ret
