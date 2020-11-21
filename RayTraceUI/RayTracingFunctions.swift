@@ -58,7 +58,7 @@ func getPlaneVectors(origin : v3d,
 
 func raytracePixels(worldCoordinates : WorldCoordinateSequence,
                     camera : v3d,
-                    ambientLighting: RGBA,
+                    ambientLighting: RGB,
                     lights : [PointLight],
                     objects : [RayIntersectable],
                     materialDictionary : [String : Material],
@@ -67,7 +67,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
     let bytesPerRow = (worldCoordinates.endXPixel - worldCoordinates.startXPixel + 1) * 4
 
     for w in worldCoordinates {
-        var pixelValues : [RGBA] = []
+        var pixelValues : [RGB] = []
 
         for focalPlanePoint in w.p {
             let c2punit = normalize(focalPlanePoint - camera)
@@ -76,7 +76,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
             traceRay(origin: camera, direction: c2punit, objects: objects, intersections: &intersections)
 
             guard !intersections.isEmpty else {
-                pixelValues.append(RGBA.black)
+                pixelValues.append(RGB.black)
                 continue
             }
             
@@ -87,7 +87,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
                 var boundedShapeIntersections : [Intersection] = []
                 traceRay(origin: camera, direction: c2punit, objects: boundedShapes, intersections: &boundedShapeIntersections)
                 guard !boundedShapeIntersections.isEmpty else {
-                    pixelValues.append(RGBA.black)
+                    pixelValues.append(RGB.black)
                     continue
                 }
                 i1 = boundedShapeIntersections[0]
@@ -102,13 +102,13 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
             pixelValues.append(intensityMultiplier)
         }
 
-        let pixelValueAverage : RGBA = pixelValues.average()
+        let pixelValueAverage : RGB = pixelValues.average()
         let horizontalOffset = w.xPixel * 4
         let firstByte = bytesPerRow * w.yPixel + horizontalOffset
         outputBitmap[firstByte] = UInt8(255 * pixelValueAverage.red)
         outputBitmap[firstByte + 1] = UInt8(255 * pixelValueAverage.green)
         outputBitmap[firstByte + 2] = UInt8(255 * pixelValueAverage.blue)
-        outputBitmap[firstByte + 3] = UInt8(255 * pixelValueAverage.alpha)
+        outputBitmap[firstByte + 3] = 255
         pixelDone?()
     }
 }
@@ -147,7 +147,7 @@ func raytraceWorld(camera : v3d,
                    focalLength : Double,
                    imageWidthPixels : Int,
                    imageHeightPixels : Int,
-                   ambientLight: RGBA,
+                   ambientLight: RGB,
                    lights : [PointLight],
                    objects : [RayIntersectable],
                    materialDictionary : [String : Material],
@@ -180,15 +180,15 @@ func raytraceWorld(camera : v3d,
 }
 
 func calculateLighting(atIntersection isect : Intersection,
-                       ambientLight : RGBA,
+                       ambientLight : RGB,
                        fromLights lights: [PointLight],
                        worldObjects objects : [RayIntersectable],
-                       materialDictionary : [String : Material]) -> RGBA {
+                       materialDictionary : [String : Material]) -> RGB {
 
     let surfacePoint = isect.point
     let m = materialDictionary[isect.object.materialName]!
 
-    var intensityMultiplier : RGBA = ambientLight * m.ka
+    var intensityMultiplier : RGB = ambientLight * m.ka
 
     // if there's no normal, skip non-ambient lighting calculations.
     guard let normal = isect.normal else {
@@ -214,7 +214,7 @@ func calculateLighting(atIntersection isect : Intersection,
         if objLightIntersections.countMatching(pred: { !$0.object.isBounding }) > 0 {
             continue
         }
-        intensityMultiplier = (normalLightVectorDp * light.k_d) + intensityMultiplier
+        intensityMultiplier = (m.kd * normalLightVectorDp * light.k_d) + intensityMultiplier
 
     }
     return intensityMultiplier

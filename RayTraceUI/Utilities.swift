@@ -45,85 +45,108 @@ extension Array {
     }
 }
 
-extension Array where Element == RGBA {
+extension Array where Element == RGB {
     func average() -> Element {
-        var cumulative : RGBA = RGBA(0, 0, 0, 0)
+        var cumulative : RGB = RGB(0, 0, 0)
         for rgba in self {
             cumulative = cumulative + rgba
         }
 
         let doubleCount = Double(self.count)
-        return RGBA(cumulative.red / doubleCount,
+        return RGB(cumulative.red / doubleCount,
                     cumulative.green / doubleCount,
-                    cumulative.blue / doubleCount,
-                    cumulative.alpha / doubleCount)
+                    cumulative.blue / doubleCount)
     }
 }
 
-struct RGBA {
+struct Clamped<T : Numeric> {
+    var _val : T
+    var max : T
+    var min : T
+
+    var val : T {
+        get {
+            return _val
+        }
+        set {
+            if newValue >= min && newValue <= max {
+                val = newValue
+                return
+            }
+            if newValue > max {
+                val = max
+                return
+            }
+
+            val = min
+        }
+    }
+
+
+}
+struct RGB {
+    typealias ArrayLiteralElement = Double
+
     var red : Double
     var green : Double
     var blue : Double
-    var alpha : Double
 
-    init(_ r : Double, _ g : Double, _ b : Double, _ a : Double) {
+    init(_ r : Double, _ g : Double, _ b : Double) {
         self.red = r
         self.green = g
         self.blue = b
-        self.alpha = a
         assertComponentsBetweenZeroAndOne()
     }
 
-
-    init(_ r : Double, _ g : Double, _ b : Double) {
-        self.init(r, g, b, 1.0)
+    init?(_ elements: [Double]) {
+        if elements.count == 3 {
+            self.init(elements[0], elements[1], elements[2])
+            return
+        }
+        return nil
     }
 
-    static func zero() -> RGBA {
-        return RGBA(0, 0, 0, 0)
+    static func zero() -> RGB {
+        return RGB(0, 0, 0)
     }
 
-    static func *(left : RGBA, right : RGBA) -> RGBA {
-        return RGBA(left.red * right.red,
+    static func *(left : RGB, right : RGB) -> RGB {
+        return RGB(left.red * right.red,
                     left.green * right.green,
-                    left.blue * right.blue,
-                    left.alpha * right.alpha)
+                    left.blue * right.blue)
     }
 
-    static func *(left : Double, right : RGBA) -> RGBA {
-        return RGBA(right.red * left,
+    static func *(left : Double, right : RGB) -> RGB {
+        return RGB(right.red * left,
                     right.green * left,
-                    right.blue * left,
-                    right.alpha)
+                    right.blue * left)
     }
 
-    static func *(left : RGBA, right : Double) -> RGBA {
+    static func *(left : RGB, right : Double) -> RGB {
         return right * left
     }
 
-    static func +(left : Double, right : RGBA) -> RGBA {
-        return RGBA(right.red + left,
+    static func +(left : Double, right : RGB) -> RGB {
+        return RGB(right.red + left,
                     right.green + left,
-                    right.blue + left,
-                    right.alpha)
+                    right.blue + left)
     }
 
-    static func +(left : RGBA, right : Double) -> RGBA {
+    static func +(left : RGB, right : Double) -> RGB {
         return right + left
     }
 
-    static func +(left : RGBA, right : RGBA) -> RGBA {
-        return RGBA(left.red + right.red,
+    static func +(left : RGB, right : RGB) -> RGB {
+        return RGB(left.red + right.red,
                     left.green + right.green,
-                    left.blue + right.blue,
-                    left.alpha + right.alpha)
+                    left.blue + right.blue)
     }
 
     func assertComponentsBetweenZeroAndOne() {
         assert(self.red >= 0 && self.red <= 1.0)
         assert(self.green >= 0 && self.green <= 1.0)
         assert(self.blue >= 0 && self.blue <= 1.0)
-        assert(self.alpha >= 0 && self.alpha <= 1.0)
     }
-    static var black : RGBA = RGBA(0, 0, 0, 1.0)
+
+    static var black : RGB = RGB(0, 0, 0)
 }

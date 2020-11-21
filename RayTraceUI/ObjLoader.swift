@@ -53,13 +53,13 @@ struct Material {
     var specularExponent : Double = 0.0
     var dissolution : Double = 0.0
     var illumination : Int = 1
-    var kd : v3d = v3d(0, 0, 0)
-    var ka : v3d = v3d(0, 0, 0)
-    var ks : v3d = v3d(0, 0, 0)
+    var kd : RGB = RGB.black
+    var ka : RGB = RGB.black
+    var ks : RGB = RGB.black
 }
 
-func parseNumbers<T> (_ line : String.SubSequence) -> [T] where T : LosslessStringConvertible, T : Numeric {
-    return line.split(separator: " ").dropFirst().map() { (T(String($0))!) }
+func parseNumbers<T : LosslessStringConvertible> (_ line : Substring) -> [T] {
+    return line.split(separator: " ").dropFirst().map() { T(String($0))! }
 }
 
 extension Substring {
@@ -122,15 +122,15 @@ func readMtlFile(_ mtlFile : String) -> [String : Material] {
                     continue
                 }
                 if mtlLine.starts(with:"Kd ") {
-                    m.kd = v3d(parseNumbers(mtlLine))
+                    m.kd = RGB(parseNumbers(mtlLine))!
                     continue
                 }
                 if mtlLine.starts(with:"Ka ") {
-                    m.ka = v3d(parseNumbers(mtlLine))
+                    m.ka = RGB(parseNumbers(mtlLine))!
                     continue
                 }
                 if mtlLine.starts(with:"Ks ") {
-                    m.ks = v3d(parseNumbers(mtlLine))
+                    m.ks = RGB(parseNumbers(mtlLine))!
                     continue
                 }
 

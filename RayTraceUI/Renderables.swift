@@ -19,15 +19,16 @@ enum BoundsDictKey {
 }
 
 protocol RayIntersectable {
-    var k_s : Double { // specular reflection constant
+    var k_s : RGB { // specular reflection constant
         get
     }
-    var k_d : Double { // diffuse reflection constant
+    var k_d : RGB { // diffuse reflection constant
         get
     }
-    var k_a : Double { // ambient reflection constant
+    var k_a : RGB { // ambient reflection constant
         get
     }
+
     var alpha : Double { // shininess constant
         get
     }
@@ -46,21 +47,22 @@ protocol RayIntersectable {
 }
 
 extension RayIntersectable {
-    var k_s : Double { // specular reflection constant
+    var k_s : RGB { // specular reflection constant
         get {
-            return 0.0
+            return RGB.zero()
         }
     }
-    var k_d : Double { // diffuse reflection constant
+    var k_d : RGB { // diffuse reflection constant
         get {
-            return 1.0
+            return RGB(1.0, 1.0, 1.0)
         }
     }
-    var k_a : Double { // ambient reflection constant
+    var k_a : RGB { // ambient reflection constant
         get {
-            return 0.0
+            return RGB.zero()
         }
     }
+    
     var alpha : Double { // shininess constant
         get {
             return 0.0
@@ -76,15 +78,15 @@ extension RayIntersectable {
 
 struct PointLight : RayIntersectable {
     let location : v3d
-    let i_s : CGColor // specular intensity
-    let i_d : CGColor // diffuse intensity
-    let k_a : CGColor // contribution to ambient light
+    let i_s : RGB // specular intensity
+    let i_d : RGB // diffuse intensity
+    let k_a : RGB // contribution to ambient light
 
     init (_ location : v3d) {
         self.location = location
-        i_s = CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
-        i_d = CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
-        k_a = CGColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
+        i_s = RGB(1.0, 1.0, 1.0)
+        i_d = RGB(1.0, 1.0, 1.0)
+        k_a = RGB(0.1, 0.1, 0.1)
     }
 
     func intersections(origin: v3d,
