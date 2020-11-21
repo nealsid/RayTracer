@@ -59,42 +59,31 @@ extension Array where Element == RGB {
     }
 }
 
-struct Clamped<T : Numeric> {
-    var _val : T
-    var max : T
-    var min : T
-
-    var val : T {
-        get {
-            return _val
+func clampFunction<T : Comparable>(_ lower : T, _ upper : T) -> ((T) -> T) {
+    return { (val : T) in
+        if val < lower {
+            return lower
         }
-        set {
-            if newValue >= min && newValue <= max {
-                val = newValue
-                return
-            }
-            if newValue > max {
-                val = max
-                return
-            }
 
-            val = min
+        if val > upper {
+            return upper
         }
+        return val
     }
-
-
 }
+
 struct RGB {
     typealias ArrayLiteralElement = Double
 
     var red : Double
     var green : Double
     var blue : Double
+    var clamper = clampFunction(0.0, 1.0)
 
     init(_ r : Double, _ g : Double, _ b : Double) {
-        self.red = r
-        self.green = g
-        self.blue = b
+        self.red = clamper(r)
+        self.green = clamper(g)
+        self.blue = clamper(b)
         assertComponentsBetweenZeroAndOne()
     }
 
