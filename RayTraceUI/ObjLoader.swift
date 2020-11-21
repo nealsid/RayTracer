@@ -50,12 +50,12 @@ struct ObjFile {
 }
 
 struct Material {
-    var specularExponent : Double = 0.0
-    var dissolution : Double = 0.0
-    var illumination : Int = 1
-    var kd : RGB = RGB.black
-    var ka : RGB = RGB.black
-    var ks : RGB = RGB.black
+    let specularExponent : Double
+    let dissolution : Double
+    let illumination : Int
+    let kd : RGB
+    let ka : RGB
+    let ks : RGB
 }
 
 func parseNumbers<T : LosslessStringConvertible> (_ line : Substring) -> [T] {
@@ -106,31 +106,37 @@ func readMtlFile(_ mtlFile : String) -> [String : Material] {
 
         if (x.starts(with: "newmtl")) {
             let materialName = String(x.split(separator: " ")[1])
-            var m = Material()
+            var specularExponent : Double!
+            var dissolution : Double!
+            var illumination : Int!
+            var kd : RGB!
+            var ka : RGB!
+            var ks : RGB!
+
             for j in i + 1..<lines.count {
                 let mtlLine = lines[j]
                 if mtlLine.starts(with:"Ns ") {
-                    m.specularExponent = parseNumbers(mtlLine)[0]
+                    specularExponent = parseNumbers(mtlLine)[0]
                     continue
                 }
                 if mtlLine.starts(with:"d ") {
-                    m.dissolution = parseNumbers(mtlLine)[0]
+                    dissolution = parseNumbers(mtlLine)[0]
                     continue
                 }
                 if mtlLine.starts(with:"illum ") {
-                    m.illumination = parseNumbers(mtlLine)[0]
+                    illumination = parseNumbers(mtlLine)[0]
                     continue
                 }
                 if mtlLine.starts(with:"Kd ") {
-                    m.kd = RGB(parseNumbers(mtlLine))!
+                    kd = RGB(parseNumbers(mtlLine))!
                     continue
                 }
                 if mtlLine.starts(with:"Ka ") {
-                    m.ka = RGB(parseNumbers(mtlLine))!
+                    ka = RGB(parseNumbers(mtlLine))!
                     continue
                 }
                 if mtlLine.starts(with:"Ks ") {
-                    m.ks = RGB(parseNumbers(mtlLine))!
+                    ks = RGB(parseNumbers(mtlLine))!
                     continue
                 }
 
@@ -140,7 +146,12 @@ func readMtlFile(_ mtlFile : String) -> [String : Material] {
                     break
                 }
             }
-            ret[materialName] = m
+            ret[materialName] = Material(specularExponent: specularExponent,
+                                         dissolution: dissolution,
+                                         illumination: illumination,
+                                         kd: kd,
+                                         ka: ka,
+                                         ks: ks)
         }
     }
     return ret

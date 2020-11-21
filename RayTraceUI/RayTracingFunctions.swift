@@ -188,7 +188,8 @@ func calculateLighting(atIntersection isect : Intersection,
     let surfacePoint = isect.point
     let m = materialDictionary[isect.object.materialName]!
 
-    var intensityMultiplier : RGB = ambientLight * m.ka
+    var intensityMultiplier = ambientLight
+    intensityMultiplier.scale(m.ka)
 
     // if there's no normal, skip non-ambient lighting calculations.
     guard let normal = isect.normal else {
@@ -214,8 +215,11 @@ func calculateLighting(atIntersection isect : Intersection,
         if objLightIntersections.countMatching(pred: { !$0.object.isBounding }) > 0 {
             continue
         }
-        intensityMultiplier = (m.kd * normalLightVectorDp * light.k_d) + intensityMultiplier
-
+        var lightContribution = light.k_d
+        lightContribution.scale(normalLightVectorDp)
+        lightContribution.scale(m.kd)
+        intensityMultiplier.add(lightContribution)
     }
+
     return intensityMultiplier
 }

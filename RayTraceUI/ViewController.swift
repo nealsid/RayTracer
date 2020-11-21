@@ -132,18 +132,18 @@ class ViewController : NSViewController {
                                   Double(cameraDirectionY.stringValue)!,
                                   Double(cameraDirectionZ.stringValue)!)
 
+        let ambientLight = RGB(Double(self.ambientLightingR.doubleValue),
+                               Double(self.ambientLightingG.doubleValue),
+                               Double(self.ambientLightingB.doubleValue))
+
         DispatchQueue.global().async(group: group) { () in
             raytraceWorld(camera: cameraLocation,
                           cameraDirection: cameraDirection,
                           focalLength: self.focalLengthValueSlider,
                           imageWidthPixels: imageWidth - 1,
                           imageHeightPixels: imageHeight - 1,
-                          ambientLight: RGB(Double(self.ambientLightingR.doubleValue),
-                                             Double(self.ambientLightingG.doubleValue),
-                                             Double(self.ambientLightingB.doubleValue)),
-                          lights: [PointLight(v3d(-500, -500, 25)),
-                                   PointLight(v3d(500, -500, 25)),
-                                   PointLight(v3d(-500, 500, 25))],
+                          ambientLight: ambientLight,
+                          lights: [PointLight(v3d(0, 10, 0))],
                           objects: self.t, //[Sphere(v3d(0, 0, 0), 50)],
 //                 Sphere(v3d(0, 1000, 0), 500)],
 /*                [Triangle([v3d(-500, -500, 0), v3d(500, -500, 0), v3d(-500, 500, 0)]),

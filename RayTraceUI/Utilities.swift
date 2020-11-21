@@ -48,14 +48,13 @@ extension Array {
 extension Array where Element == RGB {
     func average() -> Element {
         var cumulative : RGB = RGB(0, 0, 0)
-        for rgba in self {
-            cumulative = cumulative + rgba
+        for rgb in self {
+            cumulative.add(rgb)
         }
 
         let doubleCount = Double(self.count)
-        return RGB(cumulative.red / doubleCount,
-                    cumulative.green / doubleCount,
-                    cumulative.blue / doubleCount)
+        cumulative.scale(1 / doubleCount)
+        return cumulative
     }
 }
 
@@ -95,40 +94,33 @@ struct RGB {
         return nil
     }
 
+    mutating func clamp() {
+        self.red = clamper(self.red)
+        self.green = clamper(self.green)
+        self.blue = clamper(self.blue)
+    }
+
+    // Add without clamping
+    mutating func add(_ other : RGB) {
+        self.red = self.red + other.red
+        self.green = self.green + other.green
+        self.blue = self.blue + other.blue
+    }
+
+    mutating func scale(_ factor : Double) {
+        self.red = factor * self.red
+        self.green = factor * self.green
+        self.blue = factor * self.blue
+    }
+
+    mutating func scale(_ factor : RGB) {
+        self.red = factor.red * self.red
+        self.green = factor.green * self.green
+        self.blue = factor.blue * self.blue
+    }
+
     static func zero() -> RGB {
         return RGB(0, 0, 0)
-    }
-
-    static func *(left : RGB, right : RGB) -> RGB {
-        return RGB(left.red * right.red,
-                    left.green * right.green,
-                    left.blue * right.blue)
-    }
-
-    static func *(left : Double, right : RGB) -> RGB {
-        return RGB(right.red * left,
-                    right.green * left,
-                    right.blue * left)
-    }
-
-    static func *(left : RGB, right : Double) -> RGB {
-        return right * left
-    }
-
-    static func +(left : Double, right : RGB) -> RGB {
-        return RGB(right.red + left,
-                    right.green + left,
-                    right.blue + left)
-    }
-
-    static func +(left : RGB, right : Double) -> RGB {
-        return right + left
-    }
-
-    static func +(left : RGB, right : RGB) -> RGB {
-        return RGB(left.red + right.red,
-                    left.green + right.green,
-                    left.blue + right.blue)
     }
 
     func assertComponentsBetweenZeroAndOne() {
