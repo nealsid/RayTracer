@@ -96,6 +96,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
             let intensityMultiplier = calculateLighting(atIntersection: i1,
                                                         ambientLight: ambientLighting,
                                                         fromLights: lights,
+                                                        camera : camera,
                                                         worldObjects: objects,
                                                         materialDictionary: materialDictionary)
 
@@ -182,6 +183,7 @@ func raytraceWorld(camera : v3d,
 func calculateLighting(atIntersection isect : Intersection,
                        ambientLight : RGB,
                        fromLights lights: [PointLight],
+                       camera : v3d,
                        worldObjects objects : [RayIntersectable],
                        materialDictionary : [String : Material]) -> RGB {
 
@@ -219,6 +221,16 @@ func calculateLighting(atIntersection isect : Intersection,
         lightContribution.scale(normalLightVectorDp)
         lightContribution.scale(m.kd)
         intensityMultiplier.add(lightContribution)
+
+        // specular calculation
+        let lightReflection = 2 * normalLightVectorDp * normal - pointToLightUnit
+        let specularTerm = pow(dp(lightReflection, surfacePoint - camera), m.specularExponent)
+        var specularContribution = light.k_s
+        specularContribution.scale(specularTerm)
+        specularContribution.scale(m.ks)
+        intensityMultiplier.add(specularContribution)
+
+
     }
 
     return intensityMultiplier
