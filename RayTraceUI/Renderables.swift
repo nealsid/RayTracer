@@ -80,13 +80,11 @@ struct PointLight : RayIntersectable {
     let location : v3d
     let i_s : RGB // specular intensity
     let i_d : RGB // diffuse intensity
-    let k_a : RGB // contribution to ambient light
 
     init (_ location : v3d) {
         self.location = location
-        i_s = RGB(1.0, 1.0, 1.0)
+        i_s = RGB(0.2, 0.2, 0.2)
         i_d = RGB(1.0, 1.0, 1.0)
-        k_a = RGB(0.1, 0.1, 0.1)
     }
 
     func intersections(origin: v3d,
@@ -216,7 +214,8 @@ struct Sphere : RayIntersectable {
     let radiusSquared : Double
     let bounding : Bool
     let boundedShapes : [RayIntersectable]
-
+    let materialName: String = "sphere"
+    
     init(_ sphereCenter : v3d, _ sphereRadius : Double) {
         self.center = sphereCenter
         self.radius = sphereRadius

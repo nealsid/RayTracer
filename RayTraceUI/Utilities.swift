@@ -8,6 +8,12 @@
 
 import Foundation
 
+extension Optional {
+    func ifPresent<U>(transform : (Wrapped) -> U) -> U? {
+        return self.map(transform)
+    }
+}
+
 func setOnCondition<T>(A : inout T, toB : T, ifTrue : (T, T) -> Bool) {
     if ifTrue(A, toB) {
         A = toB
@@ -54,6 +60,7 @@ extension Array where Element == RGB {
 
         let doubleCount = Double(self.count)
         cumulative.scale(1 / doubleCount)
+        cumulative.checkForNan()
         return cumulative
     }
 }
@@ -105,18 +112,21 @@ struct RGB {
         self.red = self.red + other.red
         self.green = self.green + other.green
         self.blue = self.blue + other.blue
+        checkForNan()
     }
 
     mutating func scale(_ factor : Double) {
         self.red = factor * self.red
         self.green = factor * self.green
         self.blue = factor * self.blue
+        checkForNan()
     }
 
     mutating func scale(_ factor : RGB) {
         self.red = factor.red * self.red
         self.green = factor.green * self.green
         self.blue = factor.blue * self.blue
+        checkForNan()
     }
 
     static func zero() -> RGB {
@@ -129,5 +139,11 @@ struct RGB {
         assert(self.blue >= 0 && self.blue <= 1.0)
     }
 
+    func checkForNan() {
+        assert(!self.red.isNaN)
+        assert(!self.green.isNaN)
+        assert(!self.blue.isNaN)
+    }
+    
     static var black : RGB = RGB(0, 0, 0)
 }

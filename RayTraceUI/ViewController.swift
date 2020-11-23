@@ -52,7 +52,7 @@ class ViewController : NSViewController {
     var rayTraceCGImage : CGImage!
     let viewUpdateTimer = DispatchSource.makeTimerSource()
 
-    var materialDict : [String : Material]!
+    var materialDict : [String : Material] = ["sphere" : Material(specularExponent: 0.8, dissolution: 0.8, illumination: 150, kd: RGB(0.3, 0.3, 0.3), ka: RGB(0.3, 0.3, 0.3), ks: RGB(1.0, 1.0, 1.0))]
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -143,7 +143,7 @@ class ViewController : NSViewController {
                           imageWidthPixels: imageWidth - 1,
                           imageHeightPixels: imageHeight - 1,
                           ambientLight: ambientLight,
-                          lights: [PointLight(v3d(0, 125, 0))],
+                          lights: [PointLight(v3d(50, 0, 50))],
                           objects: [Sphere(v3d(0, 0, 0), 50)],
 //                 Sphere(v3d(0, 1000, 0), 500)],
 /*                [Triangle([v3d(-500, -500, 0), v3d(500, -500, 0), v3d(-500, 500, 0)]),

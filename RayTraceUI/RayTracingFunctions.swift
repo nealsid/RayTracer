@@ -188,10 +188,12 @@ func calculateLighting(atIntersection isect : Intersection,
                        materialDictionary : [String : Material]) -> RGB {
 
     let surfacePoint = isect.point
-    let m = materialDictionary[isect.object.materialName]!
+    let material = materialDictionary[isect.object.materialName]
 
     var intensityMultiplier = ambientLight
-    intensityMultiplier.scale(m.ka)
+    material.ifPresent {
+        intensityMultiplier.scale($0.ka)
+    }
 
     // if there's no normal, skip non-ambient lighting calculations.
     guard let normal = isect.normal else {
@@ -217,21 +219,33 @@ func calculateLighting(atIntersection isect : Intersection,
         if objLightIntersections.countMatching(pred: { !$0.object.isBounding }) > 0 {
             continue
         }
-        var lightContribution = light.k_d
-        lightContribution.scale(normalLightVectorDp)
-        lightContribution.scale(m.kd)
-        intensityMultiplier.add(lightContribution)
 
-        // specular calculation
-        let lightReflection = 2 * normalLightVectorDp * normal - pointToLightUnit
-        let specularTerm = pow(dp(lightReflection, surfacePoint - camera), m.specularExponent)
-        var specularContribution = light.k_s
-        specularContribution.scale(specularTerm)
-        specularContribution.scale(m.ks)
-        intensityMultiplier.add(specularContribution)
+        material.ifPresent {
+            var lightContribution = light.k_d
+            lightContribution.scale(normalLightVectorDp)
+            lightContribution.scale($0.kd)
+            intensityMultiplier.add(lightContribution)
+            // specular calculation
+            let lightReflection = normalize(2 * normalLightVectorDp * normal - pointToLightUnit)
 
+            let lightReflectDotSurfaceToViewer = dp(lightReflection, normalize(camera - surfacePoint))
 
+            if lightReflectDotSurfaceToViewer <= 0 {
+                return
+            }
+
+            let specularTerm = pow(lightReflectDotSurfaceToViewer, $0.specularExponent)
+            var specularContribution = light.i_s
+            specularContribution.scale(specularTerm)
+            specularContribution.scale($0.ks)
+            specularContribution.clamp()
+            print(specularContribution)
+            if [specularContribution.red, specularContribution.green, specularContribution.blue].contains(Double.nan) {
+                print("nan in specular")
+            }
+            intensityMultiplier.add(specularContribution)
+        }
     }
-
+    intensityMultiplier.clamp()
     return intensityMultiplier
 }
