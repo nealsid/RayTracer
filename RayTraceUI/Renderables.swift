@@ -18,73 +18,42 @@ enum BoundsDictKey {
     case MAXZ
 }
 
-protocol RayIntersectable {
-    var k_s : RGB { // specular reflection constant
-        get
-    }
-    var k_d : RGB { // diffuse reflection constant
-        get
-    }
-    var k_a : RGB { // ambient reflection constant
-        get
-    }
-
-    var alpha : Double { // shininess constant
-        get
-    }
-
-    var materialName : String {
-        get
-    }
-
+protocol WorldObject {
     func intersections(origin: v3d,
                        direction: v3d,
                        intersections : inout [Intersection])
 
     var isBounding : Bool { get }
-    func getBoundedIntersectables() -> [RayIntersectable]
+    func getBoundedIntersectables() -> [WorldObject]
     func getBounds() -> [BoundsDictKey : Double]
 }
 
-extension RayIntersectable {
-    var k_s : RGB { // specular reflection constant
-        get {
-            return RGB.zero()
-        }
-    }
-    var k_d : RGB { // diffuse reflection constant
-        get {
-            return RGB(1.0, 1.0, 1.0)
-        }
-    }
-    var k_a : RGB { // ambient reflection constant
-        get {
-            return RGB.zero()
-        }
-    }
-    
-    var alpha : Double { // shininess constant
-        get {
-            return 0.0
-        }
-    }
-
-    var materialName : String {
-        get {
-            return ""
-        }
+protocol Renderable : WorldObject {
+    var material : Material? {
+        get
     }
 }
 
-struct PointLight : RayIntersectable {
+protocol LightSource {
+    var specular : RGB {
+        get
+    }
+
+    var diffuse : RGB {
+        get
+    }
+}
+
+struct PointLight : LightSource, WorldObject {
+
     let location : v3d
-    let i_s : RGB // specular intensity
-    let i_d : RGB // diffuse intensity
+    let specular : RGB // specular intensity
+    let diffuse : RGB // diffuse intensity
 
     init (_ location : v3d) {
         self.location = location
-        i_s = RGB(0.2, 0.2, 0.2)
-        i_d = RGB(1.0, 1.0, 1.0)
+        specular = RGB(0.2, 0.2, 0.2)
+        diffuse = RGB(1.0, 1.0, 1.0)
     }
 
     func intersections(origin: v3d,
@@ -110,7 +79,7 @@ struct PointLight : RayIntersectable {
         }
     }
 
-    func getBoundedIntersectables() -> [RayIntersectable] {
+    func getBoundedIntersectables() -> [WorldObject] {
         return []
     }
 
@@ -126,13 +95,14 @@ struct PointLight : RayIntersectable {
     }
 }
 
-struct Triangle : RayIntersectable {
-    let vertices : [v3d]
-    let materialName : String
+struct Triangle : Renderable {
+    var material : Material?
 
-    init(_ points : [v3d], materialName : String) {
+    let vertices : [v3d]
+
+    init(_ points : [v3d], material : Material?) {
         self.vertices = points
-        self.materialName = materialName
+        self.material = material
         assert(points.count == 3)
     }
 
@@ -141,7 +111,7 @@ struct Triangle : RayIntersectable {
         }
     }
     
-    func getBoundedIntersectables() -> [RayIntersectable] {
+    func getBoundedIntersectables() -> [WorldObject] {
         return []
     }
 
@@ -208,23 +178,24 @@ struct Triangle : RayIntersectable {
     }
 }
 
-struct Sphere : RayIntersectable {
-    let center : v3d
+struct Sphere : WorldObject {
+    var location: v3d
+
     let radius : Double
     let radiusSquared : Double
     let bounding : Bool
-    let boundedShapes : [RayIntersectable]
+    let boundedShapes : [WorldObject]
     let materialName: String = "sphere"
     
     init(_ sphereCenter : v3d, _ sphereRadius : Double) {
-        self.center = sphereCenter
+        self.location = sphereCenter
         self.radius = sphereRadius
         self.radiusSquared = pow(self.radius, 2)
         self.bounding = false
         self.boundedShapes = []
     }
 
-    init(boundingObjects : [RayIntersectable]) {
+    init(boundingObjects : [WorldObject]) {
         var minX, maxX, minY, maxY, minZ, maxZ : Double
         minX = Double.infinity
         minY = Double.infinity
@@ -248,20 +219,19 @@ struct Sphere : RayIntersectable {
         let yDistance = abs(maxY - minY)
         let zDistance = abs(maxZ - minZ)
         self.radius = [xDistance, yDistance, zDistance].max()! / 2
-        self.center = v3d(maxX - (xDistance / 2),
+        self.location = v3d(maxX - (xDistance / 2),
                           maxY - (yDistance / 2),
                           maxZ - (zDistance / 2))
 
         self.radiusSquared = pow(self.radius, 2)
         self.boundedShapes = boundingObjects
         self.bounding = true
-        print(self.getBounds())
     }
 
     func intersections(origin : v3d,
                        direction : v3d,
                        intersections : inout [Intersection]) {
-        let centerToEye = origin - center
+        let centerToEye = origin - location
         let a = -dp(direction, centerToEye)
         let delta = pow(a, 2) - (lenSquared(centerToEye) - radiusSquared)
 
@@ -286,7 +256,7 @@ struct Sphere : RayIntersectable {
 
         d.filter({ $0 >= 0.0000001 }).forEach() {
             let p : v3d = origin + $0 * direction
-            let normalAtPoint = normalize(p - center)
+            let normalAtPoint = normalize(p - location)
             intersections.append(Intersection(atPoint: p,
                                               withNormal: normalAtPoint,
                                               parameter: $0,
@@ -296,16 +266,16 @@ struct Sphere : RayIntersectable {
 
     func getBounds() -> [BoundsDictKey : Double] {
         return [
-            .MINX : center.x - radius,
-            .MAXX : center.x + radius,
-            .MINY : center.y - radius,
-            .MAXY : center.y + radius,
-            .MINZ : center.z - radius,
-            .MAXZ : center.z + radius
+            .MINX : location.x - radius,
+            .MAXX : location.x + radius,
+            .MINY : location.y - radius,
+            .MAXY : location.y + radius,
+            .MINZ : location.z - radius,
+            .MAXZ : location.z + radius
         ]
     }
 
-    func getBoundedIntersectables() -> [RayIntersectable] {
+    func getBoundedIntersectables() -> [WorldObject] {
         return boundedShapes
     }
 

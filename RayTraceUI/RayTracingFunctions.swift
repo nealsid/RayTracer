@@ -17,16 +17,16 @@ struct Intersection {
     let point : v3d
     let normal : v3d?
     let parameter : Double
-    let object : RayIntersectable
+    let object : WorldObject
 
-    init(atPoint : v3d, parameter: Double, object: RayIntersectable) {
+    init(atPoint : v3d, parameter: Double, object: WorldObject) {
         self.init(atPoint: atPoint,
                   withNormal: nil,
                   parameter: parameter,
                   object: object)
     }
 
-    init(atPoint : v3d, withNormal: v3d?, parameter: Double, object: RayIntersectable) {
+    init(atPoint : v3d, withNormal: v3d?, parameter: Double, object: WorldObject) {
         self.point = atPoint
         self.normal = withNormal
         self.parameter = parameter
@@ -36,7 +36,7 @@ struct Intersection {
 
 func traceRay(origin: v3d,
               direction: v3d,
-              objects: [RayIntersectable],
+              objects: [WorldObject],
               intersections : inout [Intersection]) {
     for o in objects {
         o.intersections(origin: origin, direction: direction, intersections: &intersections)
@@ -60,7 +60,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
                     camera : v3d,
                     ambientLighting: RGB,
                     lights : [PointLight],
-                    objects : [RayIntersectable],
+                    objects : [WorldObject],
                     materialDictionary : [String : Material],
                     outputBitmap : inout [UInt8],
                     pixelDone : (() -> Void)?) {
@@ -114,7 +114,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
     }
 }
 
-func getBounds(_ objects : [RayIntersectable]) -> [ BoundsDictKey : Double ] {
+func getBounds(_ objects : [WorldObject]) -> [ BoundsDictKey : Double ] {
     var minX, maxX, minY, maxY, minZ, maxZ : Double
     minX = Double.infinity
     minY = Double.infinity
@@ -150,7 +150,7 @@ func raytraceWorld(camera : v3d,
                    imageHeightPixels : Int,
                    ambientLight: RGB,
                    lights : [PointLight],
-                   objects : [RayIntersectable],
+                   objects : [WorldObject],
                    materialDictionary : [String : Material],
                    outputBitmap : inout [UInt8],
                    pixelDone :  (() -> Void)?) {
@@ -180,15 +180,14 @@ func raytraceWorld(camera : v3d,
                    pixelDone: pixelDone)
 }
 
-func calculateLighting(atIntersection isect : Intersection,
+func calculateLighting<T : Renderable>(atIntersection isect : Intersection,
                        ambientLight : RGB,
                        fromLights lights: [PointLight],
                        camera : v3d,
-                       worldObjects objects : [RayIntersectable],
-                       materialDictionary : [String : Material]) -> RGB {
+                       worldObjects objects : [T]) -> RGB {
 
     let surfacePoint = isect.point
-    let material = materialDictionary[isect.object.materialName]
+    let material = isect.object.material
 
     var intensityMultiplier = ambientLight
     material.ifPresent {

@@ -48,7 +48,7 @@ class ViewController : NSViewController {
 
     // The layer that contains the raytraced image
     let rayTraceImageLayer : CALayer = CALayer()
-    var t : [RayIntersectable]!
+    var t : [WorldObject]!
     var rayTraceCGImage : CGImage!
     let viewUpdateTimer = DispatchSource.makeTimerSource()
 
@@ -102,7 +102,7 @@ class ViewController : NSViewController {
             t.append(Triangle([v3d(o.vertices[face1Vertex].x, o.vertices[face1Vertex].y, o.vertices[face1Vertex].z),
                               v3d(o.vertices[face2Vertex].x, o.vertices[face2Vertex].y, o.vertices[face2Vertex].z),
                               v3d(o.vertices[face3Vertex].x, o.vertices[face3Vertex].y, o.vertices[face3Vertex].z)],
-                              materialName: f.materialName))
+                              material: nil))
 
         }
         return t
