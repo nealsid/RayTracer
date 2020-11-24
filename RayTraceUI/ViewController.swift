@@ -64,6 +64,9 @@ class ViewController : NSViewController {
         camX.stringValue = "0.0"
         camY.stringValue = "0.0"
         camZ.stringValue = "0.0"
+        ambientLightingR.stringValue = "0.2"
+        ambientLightingG.stringValue = "0.2"
+        ambientLightingB.stringValue = "0.2"
         focalLengthNumberFormatter.maximumFractionDigits = 2
     }
 
@@ -84,9 +87,10 @@ class ViewController : NSViewController {
                 materialDict = readMtlFile(path)
             }
         }
-        let triangles = createTriangleList(objFile)
-        t = [Sphere(boundingObjects: triangles)]
-
+        objFile.ifPresent {
+            let triangles = createTriangleList($0)
+            t = [Sphere(boundingObjects: triangles)]
+        }
     }
 
     func createTriangleList(_ o : ObjFile) -> [Triangle] {
