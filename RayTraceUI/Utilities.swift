@@ -147,3 +147,7 @@ struct RGB {
     
     static var black : RGB = RGB(0, 0, 0)
 }
+
+func eq3<T : FloatingPoint>(_ a : T, _ b : T, _ c : T) -> Bool {
+    return !a.isInfinite && a == b && b == c
+}

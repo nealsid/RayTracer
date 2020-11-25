@@ -52,7 +52,7 @@ class ViewController : NSViewController {
     var rayTraceCGImage : CGImage!
     let viewUpdateTimer = DispatchSource.makeTimerSource()
 
-    var materialDict : [String : Material] = ["sphere" : Material(specularExponent: 0.8, dissolution: 0.8, illumination: 150, kd: RGB(0.3, 0.3, 0.3), ka: RGB(0.3, 0.3, 0.3), ks: RGB(1.0, 1.0, 1.0))]
+    var materialDict : [String : Material] = ["sphere" : Material(specularExponent: 0.8, dissolution: 0.8, illumination: 150, diffuse: RGB(0.3, 0.3, 0.3), ambient: RGB(0.3, 0.3, 0.3), specular: RGB(1.0, 1.0, 1.0))]
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -141,6 +141,8 @@ class ViewController : NSViewController {
                                Double(self.ambientLightingB.doubleValue))
 
         DispatchQueue.global().async(group: group) { () in
+            var s = Sphere(v3d(0, 0, 0), 50)
+            s.material = Material(specularExponent: 8, dissolution: 10, illumination: 5, diffuse: RGB(0.5, 0.5, 0.5), ambient: RGB(0.7, 0.7, 0.7), specular: RGB(1.0, 1.0, 1.0))
             raytraceWorld(camera: cameraLocation,
                           cameraDirection: cameraDirection,
                           focalLength: self.focalLengthValueSlider,
@@ -148,7 +150,7 @@ class ViewController : NSViewController {
                           imageHeightPixels: imageHeight - 1,
                           ambientLight: ambientLight,
                           lights: [PointLight(v3d(50, 0, 50))],
-                          objects: [Sphere(v3d(0, 0, 0), 50)],
+                          objects: [s],
 //                 Sphere(v3d(0, 1000, 0), 500)],
 /*                [Triangle([v3d(-500, -500, 0), v3d(500, -500, 0), v3d(-500, 500, 0)]),
                  Triangle([v3d(-500, 500, 0), v3d(500, -500, 0), v3d(500, 500, 0)]),

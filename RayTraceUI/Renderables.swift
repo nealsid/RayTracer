@@ -26,9 +26,6 @@ protocol WorldObject {
     var isBounding : Bool { get }
     func getBoundedIntersectables() -> [WorldObject]
     func getBounds() -> [BoundsDictKey : Double]
-}
-
-protocol Renderable : WorldObject {
     var material : Material? {
         get
     }
@@ -42,18 +39,26 @@ protocol LightSource {
     var diffuse : RGB {
         get
     }
+
+    var location : v3d {
+        get
+    }
 }
 
 struct PointLight : LightSource, WorldObject {
-
     let location : v3d
     let specular : RGB // specular intensity
     let diffuse : RGB // diffuse intensity
-
+    var material : Material? {
+        get {
+            return nil
+        }
+    }
+    
     init (_ location : v3d) {
         self.location = location
-        specular = RGB(0.2, 0.2, 0.2)
-        diffuse = RGB(1.0, 1.0, 1.0)
+        specular = RGB(0.8, 0.8, 0.8)
+        diffuse = RGB(0.2, 0.8, 1.0)
     }
 
     func intersections(origin: v3d,
@@ -67,10 +72,6 @@ struct PointLight : LightSource, WorldObject {
                                               parameter: t.x,
                                               object: self))
         }
-    }
-
-    func eq3<T : FloatingPoint>(_ a : T, _ b : T, _ c : T) -> Bool {
-        return !a.isInfinite && a == b && b == c
     }
 
     var isBounding : Bool {
@@ -95,7 +96,7 @@ struct PointLight : LightSource, WorldObject {
     }
 }
 
-struct Triangle : Renderable {
+struct Triangle : WorldObject {
     var material : Material?
 
     let vertices : [v3d]
@@ -185,8 +186,8 @@ struct Sphere : WorldObject {
     let radiusSquared : Double
     let bounding : Bool
     let boundedShapes : [WorldObject]
-    let materialName: String = "sphere"
-    
+    var material : Material? = nil
+
     init(_ sphereCenter : v3d, _ sphereRadius : Double) {
         self.location = sphereCenter
         self.radius = sphereRadius

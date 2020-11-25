@@ -53,9 +53,9 @@ struct Material {
     let specularExponent : Double
     let dissolution : Double
     let illumination : Int
-    let kd : RGB
-    let ka : RGB
-    let ks : RGB
+    let diffuse : RGB
+    let ambient : RGB
+    let specular : RGB
 }
 
 func parseNumbers<T : LosslessStringConvertible> (_ line : Substring) -> [T] {
@@ -149,9 +149,9 @@ func readMtlFile(_ mtlFile : String) -> [String : Material] {
             ret[materialName] = Material(specularExponent: specularExponent,
                                          dissolution: dissolution,
                                          illumination: illumination,
-                                         kd: kd,
-                                         ka: ka,
-                                         ks: ks)
+                                         diffuse: kd,
+                                         ambient: ka,
+                                         specular: ks)
         }
     }
     return ret

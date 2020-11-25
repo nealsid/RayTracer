@@ -97,8 +97,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
                                                         ambientLight: ambientLighting,
                                                         fromLights: lights,
                                                         camera : camera,
-                                                        worldObjects: objects,
-                                                        materialDictionary: materialDictionary)
+                                                        worldObjects: objects)
 
             pixelValues.append(intensityMultiplier)
         }
@@ -180,18 +179,19 @@ func raytraceWorld(camera : v3d,
                    pixelDone: pixelDone)
 }
 
-func calculateLighting<T : Renderable>(atIntersection isect : Intersection,
+func calculateLighting(atIntersection isect : Intersection,
                        ambientLight : RGB,
-                       fromLights lights: [PointLight],
+                       fromLights lights: [LightSource],
                        camera : v3d,
-                       worldObjects objects : [T]) -> RGB {
+                       worldObjects objects : [WorldObject]) -> RGB {
 
     let surfacePoint = isect.point
     let material = isect.object.material
 
-    var intensityMultiplier = ambientLight
+    var intensityMultiplier = RGB.zero()
     material.ifPresent {
-        intensityMultiplier.scale($0.ka)
+        intensityMultiplier = ambientLight
+        intensityMultiplier.scale($0.ambient)
     }
 
     // if there's no normal, skip non-ambient lighting calculations.
@@ -220,9 +220,9 @@ func calculateLighting<T : Renderable>(atIntersection isect : Intersection,
         }
 
         material.ifPresent {
-            var lightContribution = light.k_d
+            var lightContribution = light.diffuse
             lightContribution.scale(normalLightVectorDp)
-            lightContribution.scale($0.kd)
+            lightContribution.scale($0.diffuse)
             intensityMultiplier.add(lightContribution)
             // specular calculation
             let lightReflection = normalize(2 * normalLightVectorDp * normal - pointToLightUnit)
@@ -234,9 +234,9 @@ func calculateLighting<T : Renderable>(atIntersection isect : Intersection,
             }
 
             let specularTerm = pow(lightReflectDotSurfaceToViewer, $0.specularExponent)
-            var specularContribution = light.i_s
+            var specularContribution = light.specular
             specularContribution.scale(specularTerm)
-            specularContribution.scale($0.ks)
+            specularContribution.scale($0.specular)
             specularContribution.clamp()
             print(specularContribution)
             if [specularContribution.red, specularContribution.green, specularContribution.blue].contains(Double.nan) {
