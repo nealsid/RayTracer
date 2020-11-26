@@ -31,21 +31,7 @@ protocol WorldObject {
     }
 }
 
-protocol LightSource {
-    var specular : RGB {
-        get
-    }
-
-    var diffuse : RGB {
-        get
-    }
-
-    var location : v3d {
-        get
-    }
-}
-
-struct PointLight : LightSource, WorldObject {
+struct PointLight : WorldObject {
     let location : v3d
     let specular : RGB // specular intensity
     let diffuse : RGB // diffuse intensity

@@ -181,7 +181,7 @@ func raytraceWorld(camera : v3d,
 
 func calculateLighting(atIntersection isect : Intersection,
                        ambientLight : RGB,
-                       fromLights lights: [LightSource],
+                       fromLights lights: [PointLight],
                        camera : v3d,
                        worldObjects objects : [WorldObject]) -> RGB {
 

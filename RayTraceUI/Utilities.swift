@@ -78,13 +78,14 @@ func clampFunction<T : Comparable>(_ lower : T, _ upper : T) -> ((T) -> T) {
     }
 }
 
-struct RGB {
+struct RGB : CustomStringConvertible {
     typealias ArrayLiteralElement = Double
 
     var red : Double
     var green : Double
     var blue : Double
     var clamper = clampFunction(0.0, 1.0)
+
 
     init(_ r : Double, _ g : Double, _ b : Double) {
         self.red = clamper(r)
@@ -143,6 +144,10 @@ struct RGB {
         assert(!self.red.isNaN)
         assert(!self.green.isNaN)
         assert(!self.blue.isNaN)
+    }
+
+    var description: String {
+        return "R: \(self.red) G: \(self.green) B: \(self.blue)"
     }
     
     static var black : RGB = RGB(0, 0, 0)
