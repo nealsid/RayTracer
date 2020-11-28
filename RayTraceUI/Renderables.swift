@@ -31,7 +31,7 @@ protocol WorldObject {
     }
 }
 
-struct PointLight : WorldObject {
+class PointLight : NSObject, WorldObject {
     let location : v3d
     let specular : RGB // specular intensity
     let diffuse : RGB // diffuse intensity

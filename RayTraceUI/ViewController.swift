@@ -13,11 +13,13 @@ import simd
 let imageWidth : Int = 1000
 let imageHeight : Int = 1000
 
-class ViewController : NSViewController {
+class ViewController : NSViewController, NSWindowDelegate {
     var outputBitmap : [UInt8] = ([UInt8])(repeating: 0, count: 4 * imageWidth * imageHeight)
     let group = DispatchGroup()
     var stopwatchDisplayTimer : Timer!
     let camXCoord : Float = 0
+
+    var lightsWindow : NSWindow! // Reference to lights editing window
 
     @IBOutlet weak var cameraDirectionX: NSTextField!
     @IBOutlet weak var cameraDirectionY: NSTextField!
@@ -203,12 +205,36 @@ class ViewController : NSViewController {
         }
     }
 
+    // Handle segues to make sure we don't show two of the lights windows, by storing a reference when we're showing it and reshowing it if the user clicks the bgutton again.
+    override func shouldPerformSegue(withIdentifier identifier: NSStoryboardSegue.Identifier, sender: Any?) -> Bool {
+        if identifier != "showLightTable" {
+            return true
+        }
+
+        if lightsWindow == nil {
+            return true
+        } else {
+            lightsWindow.makeKeyAndOrderFront(nil)
+            return false
+        }
+    }
+
     override func prepare(for segue: NSStoryboardSegue, sender: Any?) {
         if segue.identifier == "showLightTable" {
-
-            let lightTableViewController = (segue.destinationController as! NSWindowController).window?.contentViewController as! LightViewController
+            // If lightswindow is not nil, shouldPerformSegue should return false and we shouldn't get here.
+            assert(self.lightsWindow == nil)
+            self.lightsWindow = (segue.destinationController as! NSWindowController).window!
+            self.lightsWindow.delegate = self
+            let lightTableViewController = lightsWindow.contentViewController as! LightViewController
             lightTableViewController.lights = self.lights
             lightTableViewController.lightTableView.reloadData()
+        }
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        let window = notification.object as! NSWindow
+        if self.lightsWindow != nil && self.lightsWindow == window {
+            self.lightsWindow = nil
         }
     }
 }
