@@ -32,15 +32,43 @@ protocol WorldObject {
 }
 
 class PointLight : NSObject, WorldObject {
-    let location : v3d
     let specular : RGB // specular intensity
+    let location : v3d
     let diffuse : RGB // diffuse intensity
+
     var material : Material? {
         get {
             return nil
         }
     }
     
+    // KVC helpers, since types we use are Swift structs and not KVC.
+    @objc dynamic var specularString : String {
+        return self.specular.description
+    }
+    
+    @objc dynamic var diffuseString : String {
+        return self.diffuse.description
+    }
+    
+    @objc dynamic var x : v3d.ArrayLiteralElement {
+        get {
+            return location.x
+        }
+    }
+
+    @objc dynamic var y : v3d.ArrayLiteralElement {
+        get {
+            return location.y
+        }
+    }
+
+    @objc dynamic var z : v3d.ArrayLiteralElement {
+        get {
+            return location.z
+        }
+    }
+ 
     init (_ location : v3d) {
         self.location = location
         specular = RGB(0.8, 0.8, 0.8)

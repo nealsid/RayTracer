@@ -60,7 +60,6 @@ extension Array where Element == RGB {
 
         let doubleCount = Double(self.count)
         cumulative.scale(1 / doubleCount)
-        cumulative.checkForNan()
         return cumulative
     }
 }

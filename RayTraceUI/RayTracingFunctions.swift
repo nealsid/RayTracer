@@ -238,7 +238,6 @@ func calculateLighting(atIntersection isect : Intersection,
             specularContribution.scale(specularTerm)
             specularContribution.scale($0.specular)
             specularContribution.clamp()
-            print(specularContribution)
             if [specularContribution.red, specularContribution.green, specularContribution.blue].contains(Double.nan) {
                 print("nan in specular")
             }
