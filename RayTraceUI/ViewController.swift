@@ -63,6 +63,8 @@ class ViewController : NSViewController, NSWindowDelegate {
                                             specular: RGB(0.8, 0.8, 0.8),
                                             diffuse: RGB(0.5, 0.5, 0.5))]
 
+    let showLightTableSegueId = "showLightTable"
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         rtView.layer!.borderWidth = 1
@@ -212,7 +214,7 @@ class ViewController : NSViewController, NSWindowDelegate {
 
     // Handle segues to make sure we don't show two of the lights windows, by storing a reference when we're showing it and reshowing it if the user clicks the bgutton again.
     override func shouldPerformSegue(withIdentifier identifier: NSStoryboardSegue.Identifier, sender: Any?) -> Bool {
-        if identifier != "showLightTable" {
+        if identifier != showLightTableSegueId {
             return true
         }
 
@@ -225,7 +227,7 @@ class ViewController : NSViewController, NSWindowDelegate {
     }
 
     override func prepare(for segue: NSStoryboardSegue, sender: Any?) {
-        if segue.identifier == "showLightTable" {
+        if segue.identifier == showLightTableSegueId {
             // If lightswindow is not nil, shouldPerformSegue should return false and we shouldn't get here.
             assert(self.lightsWindow == nil)
             self.lightsWindow = (segue.destinationController as! NSWindowController).window!
