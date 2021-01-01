@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F9095F4E259EDE5900D5628E /* LightEditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9095F4D259EDE5900D5628E /* LightEditorViewController.swift */; };
 		F9245DAA250C344E00C29093 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9245DA9250C344E00C29093 /* AppDelegate.swift */; };
 		F9245DAC250C344E00C29093 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9245DAB250C344E00C29093 /* ViewController.swift */; };
 		F9245DAE250C345000C29093 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F9245DAD250C345000C29093 /* Assets.xcassets */; };
@@ -22,7 +21,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		F9095F4D259EDE5900D5628E /* LightEditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightEditorViewController.swift; sourceTree = "<group>"; };
 		F9245DA6250C344E00C29093 /* RayTraceUI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RayTraceUI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9245DA9250C344E00C29093 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		F9245DAB250C344E00C29093 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -80,7 +78,6 @@
 				F942E225252FA6EB006B4EFA /* Utilities.swift */,
 				F9245DAD250C345000C29093 /* Assets.xcassets */,
 				F9245DAF250C345000C29093 /* Main.storyboard */,
-				F9095F4D259EDE5900D5628E /* LightEditorViewController.swift */,
 				F9956E5D256DF84C00662DDF /* LightTableViewController.swift */,
 				F9245DB2250C345000C29093 /* Info.plist */,
 				F9245DB3250C345000C29093 /* RayTraceUI.entitlements */,
@@ -173,7 +170,6 @@
 				F94981B225130840003CA046 /* RayTracingFunctions.swift in Sources */,
 				F942E22425283B7F006B4EFA /* ObjLoader.swift in Sources */,
 				F9245DAA250C344E00C29093 /* AppDelegate.swift in Sources */,
-				F9095F4E259EDE5900D5628E /* LightEditorViewController.swift in Sources */,
 				F94981B4251D6604003CA046 /* Renderables.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

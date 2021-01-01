@@ -69,10 +69,12 @@ class PointLight : NSObject, WorldObject {
         }
     }
  
-    init (_ location : v3d) {
+    init (atLocation location : v3d,
+          specular : RGB,
+          diffuse : RGB) {
         self.location = location
-        specular = RGB(0.8, 0.8, 0.8)
-        diffuse = RGB(0.2, 0.8, 1.0)
+        self.specular = specular
+        self.diffuse = diffuse
     }
 
     func intersections(origin: v3d,

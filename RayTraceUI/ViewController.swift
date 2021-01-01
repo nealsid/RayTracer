@@ -56,7 +56,12 @@ class ViewController : NSViewController, NSWindowDelegate {
 
     var materialDict : [String : Material] = ["sphere" : Material(specularExponent: 0.8, dissolution: 0.8, illumination: 150, diffuse: RGB(0.3, 0.3, 0.3), ambient: RGB(0.3, 0.3, 0.3), specular: RGB(1.0, 1.0, 1.0))]
 
-    var lights : [PointLight] = [PointLight(v3(50, 0, 50)), PointLight(v3d(-50, 0.0, -50))]
+    var lights : [PointLight] = [PointLight(atLocation: v3(50, 0, 50),
+                                            specular: RGB(0.8, 0.8, 0.8),
+                                            diffuse: RGB(0.5, 0.5, 0.5)),
+                                 PointLight(atLocation: v3d(-50, 0.0, -50),
+                                            specular: RGB(0.8, 0.8, 0.8),
+                                            diffuse: RGB(0.5, 0.5, 0.5))]
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -234,6 +239,8 @@ class ViewController : NSViewController, NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         let window = notification.object as! NSWindow
         if self.lightsWindow != nil && self.lightsWindow == window {
+            let lvc = lightsWindow.contentViewController as! LightViewController
+            self.lights = lvc.lights
             self.lightsWindow = nil
         }
     }
