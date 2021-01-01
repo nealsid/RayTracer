@@ -9,10 +9,14 @@
 import Foundation
 import Cocoa
 
-class LightViewController : NSViewController, NSTableViewDataSource, NSTableViewDelegate {
+class LightViewController : NSViewController {
     @objc dynamic var lights : [PointLight] = []
     let columnToProperty : [Int : String] = [:]
     
     @IBOutlet var lightsArrayController: NSArrayController!
     @IBOutlet weak var lightTableView: NSTableView!
+
+    @objc func doubleClickAction(_ tableView : NSTableView) {
+        print(lights[tableView.selectedRow])
+    }
 }

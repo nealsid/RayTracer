@@ -75,7 +75,7 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
 
             traceRay(origin: camera, direction: c2punit, objects: objects, intersections: &intersections)
 
-            guard !intersections.isEmpty else {
+            if intersections.isEmpty {
                 pixelValues.append(RGB.black)
                 continue
             }
@@ -86,13 +86,13 @@ func raytracePixels(worldCoordinates : WorldCoordinateSequence,
                 let boundedShapes = i1.object.getBoundedIntersectables()
                 var boundedShapeIntersections : [Intersection] = []
                 traceRay(origin: camera, direction: c2punit, objects: boundedShapes, intersections: &boundedShapeIntersections)
-                guard !boundedShapeIntersections.isEmpty else {
+                if boundedShapeIntersections.isEmpty {
                     pixelValues.append(RGB.black)
                     continue
                 }
                 i1 = boundedShapeIntersections[0]
             }
-
+            
             let intensityMultiplier = calculateLighting(atIntersection: i1,
                                                         ambientLight: ambientLighting,
                                                         fromLights: lights,

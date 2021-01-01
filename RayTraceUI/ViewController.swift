@@ -56,7 +56,7 @@ class ViewController : NSViewController, NSWindowDelegate {
 
     var materialDict : [String : Material] = ["sphere" : Material(specularExponent: 0.8, dissolution: 0.8, illumination: 150, diffuse: RGB(0.3, 0.3, 0.3), ambient: RGB(0.3, 0.3, 0.3), specular: RGB(1.0, 1.0, 1.0))]
 
-    var lights : [PointLight] = [PointLight(v3(50, 0, 50))]
+    var lights : [PointLight] = [PointLight(v3(50, 0, 50)), PointLight(v3d(-50, 0.0, -50))]
 
     override func viewDidLoad() {
         super.viewDidLoad()
