@@ -16,9 +16,25 @@ class LightViewController : NSViewController, NSTextFieldDelegate, NSTableViewDe
     @IBOutlet var lightsArrayController: NSArrayController!
     @IBOutlet weak var lightTableView: NSTableView!
 
+    @IBOutlet weak var lightXBox: NSTextField!
+    @IBOutlet weak var lightYBox: NSTextField!
+    @IBOutlet weak var lightZBox: NSTextField!
+    
+    @IBOutlet weak var specularR: NSTextField!
+    @IBOutlet weak var specularG: NSTextField!
+    @IBOutlet weak var specularB: NSTextField!
+
+    @IBOutlet weak var diffuseR: NSTextField!
+    @IBOutlet weak var diffuseG: NSTextField!
+    @IBOutlet weak var diffuseB: NSTextField!
+    
     let specularColId = "SPECULAR_COLUMN"
     let diffuseColId = "DIFFUSE_COLUMN"
     
+    func controlTextDidEndEditing(_ obj: Notification) {
+        updateLightFromTextBox()
+    }
+
     @IBAction func lightSelected(_ sender: Any) {
         selectedLightNumber = lightTableView.selectedRow
         let selectedLight = lights[lightTableView.selectedRow]
@@ -33,24 +49,6 @@ class LightViewController : NSViewController, NSTextFieldDelegate, NSTableViewDe
         diffuseB.stringValue = String(selectedLight.diffuse.blue)
     }
     
-
-    @IBOutlet weak var lightXBox: NSTextField!
-    @IBOutlet weak var lightYBox: NSTextField!
-    @IBOutlet weak var lightZBox: NSTextField!
-    
-    @IBOutlet weak var specularR: NSTextField!
-    @IBOutlet weak var specularG: NSTextField!
-    @IBOutlet weak var specularB: NSTextField!
-
-    @IBOutlet weak var diffuseR: NSTextField!
-    @IBOutlet weak var diffuseG: NSTextField!
-    @IBOutlet weak var diffuseB: NSTextField!
-    
-    func controlTextDidEndEditing(_ obj: Notification) {
-        print("end editing")
-        updateLightFromTextBox()
-    }
-
     func updateLightFromTextBox() {
         if self.selectedLightNumber == nil || self.selectedLightNumber == -1 {
             return
@@ -76,6 +74,7 @@ class LightViewController : NSViewController, NSTextFieldDelegate, NSTableViewDe
 
         if view.layer == nil {
             view.layer = view.makeBackingLayer()
+            view.layer?.cornerRadius = 5
         }
         
         if tc.identifier.rawValue == specularColId || tc.identifier.rawValue == diffuseColId {
@@ -88,7 +87,6 @@ class LightViewController : NSViewController, NSTextFieldDelegate, NSTableViewDe
             }
             
             view.layer?.backgroundColor = CGColor.init(red: CGFloat(rgb.red), green: CGFloat(rgb.green), blue: CGFloat(rgb.blue), alpha: 1.0)
-            view.layer?.cornerRadius = 5
         }
 
         return view
