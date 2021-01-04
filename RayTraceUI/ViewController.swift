@@ -152,8 +152,11 @@ class ViewController : NSViewController, NSWindowDelegate {
                                Double(self.ambientLightingB.doubleValue))
 
         DispatchQueue.global().async(group: group) { () in
-            var s = Sphere(v3d(0, 0, 0), 50)
-            s.material = Material(specularExponent: 8, dissolution: 10, illumination: 5, diffuse: RGB(0.5, 0.5, 0.5), ambient: RGB(0.7, 0.7, 0.7), specular: RGB(1.0, 1.0, 1.0))
+            let m = Material(specularExponent: 8, dissolution: 10, illumination: 5, diffuse: RGB(0.5, 0.5, 0.5), ambient: RGB(0.7, 0.7, 0.7), specular: RGB(1.0, 1.0, 1.0))
+            var s = Sphere(v3d(25, 0, 0), 25)
+            s.material = m
+            var s1 = Sphere(v3d(-25, 0, 0), 25)
+            s1.material = m
             raytraceWorld(camera: cameraLocation,
                           cameraDirection: cameraDirection,
                           focalLength: self.focalLengthValueSlider,
@@ -161,7 +164,7 @@ class ViewController : NSViewController, NSWindowDelegate {
                           imageHeightPixels: imageHeight - 1,
                           ambientLight: ambientLight,
                           lights: self.lights,
-                          objects: [s],
+                          objects: [s, s1],
 //                 Sphere(v3d(0, 1000, 0), 500)],
 /*                [Triangle([v3d(-500, -500, 0), v3d(500, -500, 0), v3d(-500, 500, 0)]),
                  Triangle([v3d(-500, 500, 0), v3d(500, -500, 0), v3d(500, 500, 0)]),

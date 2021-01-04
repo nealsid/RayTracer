@@ -199,6 +199,8 @@ func calculateLighting(atIntersection isect : Intersection,
         // TODO make this the ambient light instead of 0
         return intensityMultiplier
     }
+    
+    let surfaceToCamera = normalize(camera - surfacePoint)
 
     for light in lights {
         let pointToLightUnit = normalize(light.location - surfacePoint)
@@ -227,7 +229,7 @@ func calculateLighting(atIntersection isect : Intersection,
             // specular calculation
             let lightReflection = normalize(2 * normalLightVectorDp * normal - pointToLightUnit)
 
-            let lightReflectDotSurfaceToViewer = dp(lightReflection, normalize(camera - surfacePoint))
+            let lightReflectDotSurfaceToViewer = dp(lightReflection, surfaceToCamera)
 
             if lightReflectDotSurfaceToViewer <= 0 {
                 return
@@ -238,9 +240,8 @@ func calculateLighting(atIntersection isect : Intersection,
             specularContribution.scale(specularTerm)
             specularContribution.scale($0.specular)
             specularContribution.clamp()
-            if [specularContribution.red, specularContribution.green, specularContribution.blue].contains(Double.nan) {
-                print("nan in specular")
-            }
+            specularContribution.checkForNan()
+
             intensityMultiplier.add(specularContribution)
         }
     }
