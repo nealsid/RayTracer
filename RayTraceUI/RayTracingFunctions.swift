@@ -183,7 +183,8 @@ func calculateLighting(atIntersection isect : Intersection,
                        ambientLight : RGB,
                        fromLights lights: [PointLight],
                        camera : v3d,
-                       worldObjects objects : [WorldObject]) -> RGB {
+                       worldObjects objects : [WorldObject],
+                       reflect : Bool = true) -> RGB {
 
     let surfacePoint = isect.point
     let material = isect.object.material
@@ -201,7 +202,27 @@ func calculateLighting(atIntersection isect : Intersection,
     }
     
     let surfaceToCamera = normalize(camera - surfacePoint)
+    
+    // reflection calculation
+    if reflect {
+        let incident = -surfaceToCamera
+        let reflection = incident - (2 * dp(incident, normal) * normal)
+        var reflectionIntersections : [Intersection] = []
+        var reflectionLightContribution : RGB = RGB.zero()
+        traceRay(origin: surfacePoint, direction: reflection, objects: objects, intersections: &reflectionIntersections)
+        // grab closest intersection
 
+        if !reflectionIntersections.isEmpty {
+            reflectionLightContribution = calculateLighting(atIntersection: reflectionIntersections[0],
+                                                            ambientLight: ambientLight,
+                                                            fromLights: lights,
+                                                            camera : surfacePoint,
+                                                            worldObjects: objects,
+                                                            reflect : false)
+        }
+        intensityMultiplier.add(reflectionLightContribution)
+    }
+    
     for light in lights {
         let pointToLightUnit = normalize(light.location - surfacePoint)
         // if the face normal points away from light, continue to next light source.
